@@ -50,6 +50,48 @@
     mount.replaceChildren(list);
   }
 
+  function fitTestimonialsPanel() {
+    const section = document.querySelector(".training-testimonials");
+    const alignTarget = document.querySelector(".training-page__title--section");
+    const stack = document.querySelector(".training-visual-stack");
+    const lastPanel = document.querySelector(
+      ".training-grid__content .training-panel-list:last-of-type .training-panel-list__item:last-child"
+    );
+    if (!section || !alignTarget || !lastPanel || !stack) return;
+
+    if (window.matchMedia("(max-width: 900px)").matches) {
+      section.style.position = "";
+      section.style.top = "";
+      section.style.left = "";
+      section.style.right = "";
+      section.style.width = "";
+      section.style.height = "";
+      section.style.marginTop = "";
+      return;
+    }
+
+    const stackRect = stack.getBoundingClientRect();
+    const targetRect = alignTarget.getBoundingClientRect();
+    const lastRect = lastPanel.getBoundingClientRect();
+    const top = targetRect.top - stackRect.top;
+    const height = lastRect.bottom - targetRect.top;
+    const card = document.querySelector(".training-testimonial");
+    const list = document.querySelector(".training-testimonials__list");
+    let rowExtra = 75;
+    if (card && list) {
+      const gap = parseFloat(getComputedStyle(list).gap) || 0;
+      rowExtra = card.offsetHeight + gap;
+    }
+
+    section.style.position = "absolute";
+    section.style.top = `${Math.round(Math.max(0, top))}px`;
+    section.style.left = "0";
+    section.style.right = "0";
+    section.style.width = "100%";
+    section.style.marginTop = "0";
+    section.style.height = `${Math.round(Math.max(220, height + rowExtra - 30))}px`;
+  }
+
   ready(async () => {
     const mount = document.getElementById("training-testimonials");
     if (!mount) return;
@@ -60,8 +102,22 @@
       const html = await res.text();
       const items = parseSnippet(html);
       render(items, mount);
+      requestAnimationFrame(() => {
+        fitTestimonialsPanel();
+        requestAnimationFrame(fitTestimonialsPanel);
+      });
     } catch {
       mount.textContent = "לא ניתן לטעון תגובות כרגע.";
+    }
+
+    const img = document.querySelector(".training-grid__visual img");
+    if (img && !img.complete) {
+      img.addEventListener("load", fitTestimonialsPanel, { once: true });
+    }
+
+    window.addEventListener("resize", fitTestimonialsPanel);
+    if (document.fonts?.ready) {
+      document.fonts.ready.then(fitTestimonialsPanel);
     }
   });
 })();
