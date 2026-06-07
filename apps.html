@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="פיתוח אפליקציות בהתאם לדרישה — נורית שושני-הכל" />
+  <title>פיתוח אפליקציות | נורית שושני-הכל</title>
+  <link rel="stylesheet" href="styles.css?v=20260602b" />
+</head>
+<body>
+  <a class="skip-link" href="#main">דלג לתוכן</a>
+  <header class="site-header">
+    <nav class="nav" aria-label="ניווט ראשי">
+      <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="nav-menu">
+        <span class="nav__toggle-bar"></span><span class="nav__toggle-bar"></span><span class="nav__toggle-bar"></span>
+        <span class="visually-hidden">תפריט</span>
+      </button>
+      <ul class="nav__menu" id="nav-menu">
+        <li><a href="index.html">נורית שושני-הכל</a></li>
+        <li><a href="lectures.html">הרצאות לקהל הרחב</a></li>
+        <li><a href="training.html">הדרכות מורים ומפתחי חומרי למידה</a></li>
+        <li><a class="nav__link--active" href="apps.html">פיתוח אפליקציות</a></li>
+        <li><a href="contact.html">יצירת קשר</a></li>
+      </ul>
+    </nav>
+  </header>
+  <main id="main" class="page page--apps">
+    <div class="page-home__overlay" aria-hidden="true"></div>
+    <div class="container apps-page__inner">
+      <div class="apps-grid apps-layout-canvas" id="apps-layout-canvas">
+        <div class="apps-content apps-layout-item" data-layout-id="text" id="apps-layout-text">
+          <h1 class="page__title">פיתוח אפליקציות</h1>
+          <p>פיתוח אפליקציות בהתאם לדרישה.</p>
+          <p>תוכלו להזמין את האפליקציה הנדרשת לכם, לתכנן אותה בפגישות עמי, ולקבל תוצר בהתאם לדרישות. מספר הסבבים הנדרש תלוי ברמת המורכבות של הפרוייקט.</p>
+          <h2>אפליקציות שפותחו:</h2>
+          <ul>
+            <li>אפליקציה לעריכה והוצאה מחדש של ספרות קודש – ניתן להזמין בתשלום</li>
+            <li>אפליקציה להעסקה ישירה של עובדים זרים – ניתן להזמין מנוי חודשי בתשלום – חודש ראשון חינמי, כל חודש נוסף 100 שקלים (זול משמעותית מהעסקה דרך חברה)</li>
+          </ul>
+          <h2>חומרים שפותחו לדוגמה עבור הוצאת כנרת:</h2>
+          <ul>
+            <li><a href="https://genie-qr-creator.vercel.app/" target="_blank" rel="noopener noreferrer">אפליקציה ליצירת QR CODE סטטיים</a> (קבועים ללא מעבר דרך חברה) בהתאם לטבלת לינקים.</li>
+            <li><a href="https://nsh68.github.io/Biology-Kineret/" target="_blank" rel="noopener noreferrer">סרטון פרסומת עם דף הרשמה</a> לרכישת ספר לימוד שנכתב עבור הוצאת כנרת</li>
+            <li>דפי HTML לדוגמה המופיעים בספר:
+              <ul>
+                <li><a href="https://nsh68.github.io/Body_and_Soul/" target="_blank" rel="noopener noreferrer">גוף-נפש – סיכומי מחקרים</a></li>
+                <li><a href="https://nsh68.github.io/flow_chart_tools/" target="_blank" rel="noopener noreferrer">השוואות בין כלים לייצור תרשימים</a></li>
+              </ul>
+            </li>
+          </ul>
+          <h2>אפליקציות לדוגמה לצרכי למידה:</h2>
+          <ul>
+            <li><a href="https://phyto-lab-wiz.lovable.app/" target="_blank" rel="noopener noreferrer">הדמיית מעבדת פוטוסינתזה</a></li>
+            <li>הדמיית מעבדת אוסמוזה</li>
+            <li>הדמיית מעבדת נשימה תאית</li>
+            <li>הדמיית מעבדת אנזימים</li>
+          </ul>
+        </div>
+        <figure class="apps-grid__visual apps-layout-item" data-layout-id="image" id="apps-layout-image">
+          <img src="assets/application.png" alt="פיתוח אפליקציות — פתרון חכם לחיים קלים" loading="lazy" width="640" height="400" />
+        </figure>
+      </div>
+      <div class="apps-layout-toolbar" id="apps-layout-toolbar" aria-label="עריכת מיקום בדף">
+        <button type="button" class="apps-layout-toolbar__btn" id="apps-layout-toggle" aria-pressed="false" onclick="window.toggleAppsLayoutEdit && window.toggleAppsLayoutEdit()">
+          גרור ומקם אלמנטים
+        </button>
+        <button type="button" class="apps-layout-toolbar__btn apps-layout-toolbar__btn--secondary" id="apps-layout-reset">
+          איפוס מיקום
+        </button>
+        <label class="apps-layout-toolbar__rotate" id="apps-layout-rotate-wrap" hidden>
+          <span>סיבוב תמונה</span>
+          <input type="range" id="apps-layout-rotate" min="-20" max="50" value="32" step="1" />
+          <output id="apps-layout-rotate-value">32°</output>
+        </label>
+        <p class="apps-layout-toolbar__hint" id="apps-layout-hint" hidden>גררי את תיבת הטקסט והתמונה. המיקום נשמר אצלך בדפדפן.</p>
+      </div>
+    </div>
+  </main>
+  <footer class="site-footer"><div class="container"><p>This site was built by Nurit Shoshani-Hechel</p></div></footer>
+  <script src="script.js"></script>
+  <script src="apps-layout.js?v=4"></script>
+</body>
+</html>

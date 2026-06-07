@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta name="description" content="יצירת קשר — נורית שושני-הכל" />
+  <title>יצירת קשר | נורית שושני-הכל</title>
+  <link rel="stylesheet" href="styles.css?v=20260602d" />
+</head>
+<body class="page-contact">
+  <a class="skip-link" href="#main">דלג לתוכן</a>
+  <header class="site-header">
+    <nav class="nav" aria-label="ניווט ראשי">
+      <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="nav-menu">
+        <span class="nav__toggle-bar"></span>
+        <span class="nav__toggle-bar"></span>
+        <span class="nav__toggle-bar"></span>
+        <span class="visually-hidden">תפריט</span>
+      </button>
+      <ul class="nav__menu" id="nav-menu">
+        <li><a href="index.html">נורית שושני-הכל</a></li>
+        <li><a href="lectures.html">הרצאות לקהל הרחב</a></li>
+        <li><a href="training.html">הדרכות מורים ומפתחי חומרי למידה</a></li>
+        <li><a href="apps.html">פיתוח אפליקציות</a></li>
+        <li><a class="nav__link--active" href="contact.html">יצירת קשר</a></li>
+      </ul>
+    </nav>
+  </header>
+  <main id="main" class="page page--contact">
+    <div class="page-home__overlay" aria-hidden="true"></div>
+    <div class="container contact-page__inner">
+      <h1 class="page__title">צור קשר</h1>
+      <form id="contact-form" class="contact-form contact-form--compact" novalidate>
+        <div class="contact-form__field">
+          <label for="full-name">שם מלא</label>
+          <input type="text" id="full-name" name="full-name" required autocomplete="name" />
+        </div>
+        <div class="contact-form__row">
+          <div class="contact-form__field">
+            <label for="phone">טלפון סלולרי</label>
+            <input type="tel" id="phone" name="phone" required autocomplete="tel" />
+          </div>
+          <div class="contact-form__field">
+            <label for="email">דוא"ל</label>
+            <input type="email" id="email" name="email" required autocomplete="email" />
+          </div>
+        </div>
+        <div class="contact-form__row contact-form__row--topic">
+          <div class="contact-form__field">
+            <label for="topic">פניה בנושא</label>
+            <select id="topic" name="topic" required>
+              <option value="">בחרו נושא</option>
+              <option value="public-lecture">הרצאה לקהל הרחב</option>
+              <option value="staff-lecture">הרצאה לצוותי הוראה/צוותי פיתוח</option>
+              <option value="app-development">בקשה לפיתוח אפליקציה</option>
+            </select>
+          </div>
+          <div class="contact-form__field">
+            <label for="topic-open">נושא נוסף</label>
+            <input type="text" id="topic-open" name="topic-open" />
+          </div>
+        </div>
+        <div class="contact-form__field">
+          <label for="message">הודעה</label>
+          <textarea id="message" name="message" rows="3" maxlength="2000"></textarea>
+          <p id="word-count" class="contact-form__hint" aria-live="polite">0 / 200 מילים</p>
+        </div>
+        <p id="contact-error" class="contact-form__error" role="alert" hidden></p>
+        <button type="submit">שליחה</button>
+      </form>
+      <div id="contact-thanks" class="contact-thanks" hidden tabindex="-1">
+        <p>תודה רבה! אשמח ליצור עמכם קשר ביום יומיים הקרובים. המשך יום טוב</p>
+        <img src="assets/backgrounds/flowers.png" alt="" width="400" height="300" />
+      </div>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div class="container">
+      <p>This site was built by Nurit Shoshani-Hechel</p>
+    </div>
+  </footer>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="script.js"></script>
+  <script src="contact.js"></script>
+  <script src="chat-widget.js"></script>
+</body>
+</html>
