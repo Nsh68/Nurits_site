@@ -476,8 +476,7 @@ main {
   clear: both;
 }
 
-.page--contact .contact-form,
-.page--contact .contact-thanks {
+.page--contact .contact-form {
   background: rgba(255, 255, 255, 0.88);
   padding: 1.25rem 1.5rem 1.5rem;
   border-radius: var(--radius-lg);
@@ -576,35 +575,45 @@ main {
 }
 
 .contact-form button[type="submit"]:disabled {
-  opacity: 0.7;
-  cursor: wait;
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.contact-form button[type="submit"]:disabled:not([data-submitting="true"]) {
+  transform: none;
 }
 
 .contact-thanks {
   display: none;
-  text-align: center;
-  max-width: 32rem;
-  margin: 2rem auto 0;
 }
 
 .contact-thanks.is-visible {
-  display: block;
+  display: flex;
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: calc(var(--header-h) + 1rem) 1.5rem 1.5rem;
+  background: url("assets/sea1.png") center 48% / cover no-repeat;
 }
 
-.contact-thanks p {
+.contact-thanks__message {
+  position: relative;
+  z-index: 1;
+  max-width: 36rem;
+  margin: 0;
+  padding-inline: 1rem;
   font-family: var(--font-heading);
-  font-size: 1.2rem;
-  color: var(--color-deep);
-  margin: 0 0 1.5rem;
+  font-size: clamp(1.2rem, 2.8vw, 1.6rem);
+  line-height: 1.55;
+  color: #fff;
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.45);
 }
 
-.contact-thanks img {
-  margin-inline: auto;
-  max-width: 280px;
-  border-radius: var(--radius-lg);
-}
-
-.contact-form.is-hidden {
+.contact-form.is-hidden,
+.page--contact .page__title.is-hidden {
   display: none;
 }
 
@@ -622,9 +631,14 @@ main {
   max-width: 34rem;
 }
 
-.page--contact .contact-form--compact,
-.page--contact .contact-thanks {
+.page--contact .contact-form--compact {
   padding: 0.85rem 1.1rem 0.95rem;
+}
+
+.page--contact .contact-thanks.is-visible {
+  border-radius: 0;
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
 .page--contact .contact-form--compact .contact-form__field {

@@ -5,9 +5,30 @@
   const wordCountEl = document.getElementById("word-count");
   const errorEl = document.getElementById("contact-error");
   const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
+  const requiredFields = form
+    ? ["full-name", "phone", "email", "topic"].map((name) => form.elements[name])
+    : [];
   const MAX_WORDS = 200;
 
   if (!form || !thanks) return;
+
+  function isEmailValid(value) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+  }
+
+  function isFormComplete() {
+    const fullName = form.elements["full-name"].value.trim();
+    const phone = form.elements.phone.value.trim();
+    const email = form.elements.email.value.trim();
+    const topic = form.elements.topic.value;
+
+    return Boolean(fullName && phone && email && isEmailValid(email) && topic);
+  }
+
+  function updateSubmitState() {
+    if (!submitBtn || submitBtn.dataset.submitting === "true") return;
+    submitBtn.disabled = !isFormComplete();
+  }
 
   function countWords(text) {
     return text
@@ -32,6 +53,13 @@
     messageField.addEventListener("input", updateWordCount);
     updateWordCount();
   }
+
+  requiredFields.forEach((field) => {
+    if (!field) return;
+    field.addEventListener("input", updateSubmitState);
+    field.addEventListener("change", updateSubmitState);
+  });
+  updateSubmitState();
 
   function showError(message) {
     if (!errorEl) return;
@@ -63,8 +91,43 @@
 
   function setSubmitting(isSubmitting) {
     if (!submitBtn) return;
-    submitBtn.disabled = isSubmitting;
+    submitBtn.dataset.submitting = isSubmitting ? "true" : "false";
+    submitBtn.disabled = isSubmitting || !isFormComplete();
     submitBtn.textContent = isSubmitting ? "שולח..." : "שליחה";
+  }
+
+  function validateRequiredFields() {
+    const fullName = form.elements["full-name"].value.trim();
+    const phone = form.elements.phone.value.trim();
+    const email = form.elements.email.value.trim();
+    const topic = form.elements.topic.value;
+
+    if (!fullName) {
+      showError("נא למלא שם מלא.");
+      form.elements["full-name"].focus();
+      return false;
+    }
+    if (!phone) {
+      showError("נא למלא טלפון סלולרי.");
+      form.elements.phone.focus();
+      return false;
+    }
+    if (!email) {
+      showError('נא למלא כתובת דוא"ל.');
+      form.elements.email.focus();
+      return false;
+    }
+    if (!isEmailValid(email)) {
+      showError('נא למלא כתובת דוא"ל תקינה.');
+      form.elements.email.focus();
+      return false;
+    }
+    if (!topic) {
+      showError("נא לבחור נושא לפניה.");
+      form.elements.topic.focus();
+      return false;
+    }
+    return true;
   }
 
   function getSupabaseClient() {
@@ -79,7 +142,10 @@
   }
 
   function showThanks() {
+    const title = document.querySelector(".page--contact .page__title");
+
     form.classList.add("is-hidden");
+    if (title) title.classList.add("is-hidden");
     thanks.classList.add("is-visible");
     thanks.hidden = false;
     thanks.setAttribute("tabindex", "-1");
@@ -103,6 +169,11 @@
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     clearError();
+
+    if (!validateRequiredFields()) {
+      updateSubmitState();
+      return;
+    }
 
     const words = messageField ? countWords(messageField.value) : 0;
     if (words > MAX_WORDS) {

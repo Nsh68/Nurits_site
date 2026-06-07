@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta name="description" content="יצירת קשר — נורית שושני-הכל" />
   <title>יצירת קשר | נורית שושני-הכל</title>
-  <link rel="stylesheet" href="styles.css?v=20260602d" />
+  <link rel="stylesheet" href="styles.css?v=20260602j" />
 </head>
 <body class="page-contact">
   <a class="skip-link" href="#main">דלג לתוכן</a>
@@ -31,7 +31,7 @@
     <div class="page-home__overlay" aria-hidden="true"></div>
     <div class="container contact-page__inner">
       <h1 class="page__title">צור קשר</h1>
-      <form id="contact-form" class="contact-form contact-form--compact" novalidate>
+      <form id="contact-form" class="contact-form contact-form--compact">
         <div class="contact-form__field">
           <label for="full-name">שם מלא</label>
           <input type="text" id="full-name" name="full-name" required autocomplete="name" />
@@ -67,11 +67,10 @@
           <p id="word-count" class="contact-form__hint" aria-live="polite">0 / 200 מילים</p>
         </div>
         <p id="contact-error" class="contact-form__error" role="alert" hidden></p>
-        <button type="submit">שליחה</button>
+        <button type="submit" disabled>שליחה</button>
       </form>
       <div id="contact-thanks" class="contact-thanks" hidden tabindex="-1">
-        <p>תודה רבה! אשמח ליצור עמכם קשר ביום יומיים הקרובים. המשך יום טוב</p>
-        <img src="assets/backgrounds/flowers.png" alt="" width="400" height="300" />
+        <p class="contact-thanks__message">תודה רבה! אשמח ליצור עמכם קשר ביום יומיים הקרובים. המשך יום טוב</p>
       </div>
     </div>
   </main>
