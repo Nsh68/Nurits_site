@@ -5,8 +5,12 @@
     "איני יודעת לענות על כך מתוך המידע הקיים באתר. נשמח לחזור אליכם בנושא זה טלפונית.";
   const tooLongMessage =
     "השאלה ארוכה מדי לצ'אט. אנא קצרו אותה לעד 800 תווים ושלחו שוב.";
+  const welcomeMessage =
+    "שלום ותודה על הפנייה! אני המזכירה של נורית — אשמח לעזור במה שמופיע באתר: הרצאות, הדרכות או אפליקציות.";
+  const storageKey = "nurit-chat-state";
   const maxMessageChars = 800;
   const maxMessagesForChat = 8;
+  const maxStoredMessages = 40;
 
   let client = null;
   let isSending = false;
@@ -24,6 +28,32 @@
     return client;
   }
 
+  function loadStoredState() {
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed.ui) || !Array.isArray(parsed.history)) return null;
+      return parsed;
+    } catch (_error) {
+      return null;
+    }
+  }
+
+  function saveState(uiMessages) {
+    try {
+      localStorage.setItem(
+        storageKey,
+        JSON.stringify({
+          ui: uiMessages.slice(-maxStoredMessages),
+          history: history.slice(-maxStoredMessages),
+        })
+      );
+    } catch (_error) {
+      // Ignore quota or private-mode storage errors.
+    }
+  }
+
   function createElement(tag, className, text) {
     const element = document.createElement(tag);
     if (className) element.className = className;
@@ -31,7 +61,7 @@
     return element;
   }
 
-  function addMessage(list, role, text) {
+  function renderMessage(list, role, text) {
     const item = createElement(
       "div",
       `chat-widget__message chat-widget__message--${role}`
@@ -39,6 +69,21 @@
     item.textContent = text;
     list.appendChild(item);
     list.scrollTop = list.scrollHeight;
+  }
+
+  function addMessage(list, role, text, uiMessages, persist = true) {
+    renderMessage(list, role, text);
+    if (persist && uiMessages) {
+      uiMessages.push({ role, content: text });
+      saveState(uiMessages);
+    }
+  }
+
+  function restoreMessages(list, uiMessages) {
+    list.textContent = "";
+    uiMessages.forEach((message) => {
+      renderMessage(list, message.role, message.content);
+    });
   }
 
   function setStatus(statusEl, text) {
@@ -53,7 +98,7 @@
     button.textContent = sending ? "שולחת..." : "שליחה";
   }
 
-  async function sendMessage({ list, statusEl, textarea, sendButton }) {
+  async function sendMessage({ list, statusEl, textarea, sendButton, uiMessages }) {
     const text = textarea.value.trim();
     if (!text || isSending) return;
 
@@ -65,13 +110,14 @@
     const supabaseClient = getSupabaseClient();
     if (!supabaseClient) {
       setStatus(statusEl, unavailableMessage);
-      addMessage(list, "assistant", unavailableMessage);
+      addMessage(list, "assistant", unavailableMessage, uiMessages);
       return;
     }
 
     textarea.value = "";
-    addMessage(list, "user", text);
+    addMessage(list, "user", text, uiMessages);
     history.push({ role: "user", content: text });
+    saveState(uiMessages);
     setStatus(statusEl, "");
     setSending(sendButton, textarea, true);
 
@@ -86,12 +132,14 @@
         typeof data?.reply === "string" && data.reply.trim()
           ? data.reply.trim()
           : fallbackKnowledgeMessage;
-      addMessage(list, "assistant", reply);
+      addMessage(list, "assistant", reply, uiMessages);
       history.push({ role: "assistant", content: reply });
+      saveState(uiMessages);
     } catch (error) {
       console.warn("Chat function failed:", error);
       setStatus(statusEl, unavailableMessage);
-      addMessage(list, "assistant", unavailableMessage);
+      addMessage(list, "assistant", unavailableMessage, uiMessages);
+      saveState(uiMessages);
     } finally {
       setSending(sendButton, textarea, false);
       textarea.focus();
@@ -100,6 +148,15 @@
 
   function initChatWidget() {
     if (document.querySelector(".chat-widget")) return;
+
+    const stored = loadStoredState();
+    const uiMessages = stored?.ui?.length
+      ? stored.ui.slice()
+      : [{ role: "assistant", content: welcomeMessage }];
+
+    if (stored?.history?.length) {
+      stored.history.forEach((message) => history.push(message));
+    }
 
     const root = createElement("section", "chat-widget");
     root.setAttribute("aria-label", "צ'אט מידע");
@@ -120,11 +177,7 @@
 
     const list = createElement("div", "chat-widget__messages");
     list.setAttribute("aria-live", "polite");
-    addMessage(
-      list,
-      "assistant",
-      "שלום ותודה על הפנייה! אני המזכירה של נורית — אשמח לעזור במה שמופיע באתר: הרצאות, הדרכות או אפליקציות."
-    );
+    restoreMessages(list, uiMessages);
 
     const statusEl = createElement("p", "chat-widget__status");
     statusEl.hidden = true;
@@ -171,7 +224,7 @@
 
     form.addEventListener("submit", (event) => {
       event.preventDefault();
-      sendMessage({ list, statusEl, textarea, sendButton });
+      sendMessage({ list, statusEl, textarea, sendButton, uiMessages });
     });
 
     textarea.addEventListener("keydown", (event) => {

@@ -13,12 +13,20 @@ const unclearReply =
   "לא הצלחתי להבין את השאלה. אפשר לנסח שוב? אני יכולה לעזור בנושאי האתר — הרצאות, הדרכות, אפליקציות או יצירת קשר.";
 const greetingReply =
   "שלום ותודה על הפנייה! אני כאן לעזור במה שמופיע באתר — הרצאות, הדרכות או אפליקציות. במה תרצו לשמוע?";
+const lecturesPageReply =
+  'נורית מציעה מגוון הרצאות מרתקות לקהל הרחב! כדי לראות את הרשימה המלאה, עברו ללשונית "הרצאות לקהל הרחב" באתר. אם אחרי הקריאה משהו לא ברור — חזרו אליי ואשמח לעזור.';
+const trainingPageReply =
+  'בנושא הדרכות מורים ומפתחי חומרי למידה יש באתר מידע מפורט. עברו ללשונית "הדרכות מורים ומפתחי חומרי למידה", ואם משהו לא ברור — חזרו אליי.';
+const appsPageReply =
+  'בנושא פיתוח אפליקציות יש באתר הסבר מפורט. עברו ללשונית "פיתוח אפליקציות", ואם משהו לא ברור — חזרו אליי.';
+const contactPageReply =
+  'ליצירת קשר ושליחת פנייה, עברו ללשונית "יצירת קשר" באתר — שם מחכה לכם טופס מלא. אם משהו לא ברור — חזרו אליי.';
 const tooLongMessage =
   "השאלה ארוכה מדי לצ'אט. אנא קצרו אותה לעד 800 תווים ושלחו שוב.";
 const maxMessageChars = 800;
 const maxMessagesForGemini = 8;
 const maxHistoryMessages = 6;
-const maxOutputTokens = 650;
+const maxOutputTokens = 500;
 
 const siteKnowledge = `
 מידע מאושר מתוך אתר נורית שושני-הכל:
@@ -62,6 +70,12 @@ const siteKnowledge = `
 - באתר יש טופס יצירת קשר עם שם פרטי, שם משפחה, טלפון סלולרי, דוא"ל, נושא פנייה, נושא נוסף והודעה עד 200 מילים.
 - נושאי הפנייה בטופס: הרצאה לקהל הרחב, הרצאה לצוותי הוראה/צוותי פיתוח, בקשה לפיתוח אפליקציה.
 - לאחר שליחת פנייה מופיעה הודעה: תודה רבה! אשמח ליצור עמכם קשר ביום יומיים הקרובים. המשך יום טוב.
+
+דפי האתר (להפניה במקום רשימות ארוכות בצ'אט):
+- הרצאות לקהל הרחב: lectures.html
+- הדרכות מורים ומפתחי חומרי למידה: training.html
+- פיתוח אפליקציות: apps.html
+- יצירת קשר: contact.html
 
 אם נשאלת שאלה שהתשובה לה לא מופיעה במידע המאושר הזה, יש להשיב בדיוק:
 ${fallbackReply}
@@ -111,28 +125,169 @@ function getLatestUserMessage(payload: Record<string, unknown>) {
   return "";
 }
 
-function isGreeting(text: string) {
-  const normalized = text.trim().replace(/[!?.,]+$/g, "");
-  return /^(שלום|אהלן|היי|הי|בוקר טוב|ערב טוב|מה נשמע|מה שלומך|מה קורה)$/i.test(
-      normalized
-    ) ||
-    /^(שלום|אהלן|היי)[\s,]+(מה נשמע|מה שלומך|מה קורה)$/i.test(normalized);
+const ENGLISH_KEY_TO_HEBREW: Record<string, string> = {
+  q: "/",
+  w: "'",
+  e: "ק",
+  r: "ר",
+  t: "א",
+  y: "ו",
+  u: "ה",
+  i: "ן",
+  o: "ם",
+  p: "פ",
+  a: "ש",
+  s: "ד",
+  d: "ג",
+  f: "כ",
+  g: "ע",
+  h: "י",
+  j: "ח",
+  k: "ל",
+  l: "ך",
+  z: "ז",
+  x: "ס",
+  c: "ב",
+  v: "ה",
+  b: "נ",
+  n: "מ",
+  m: "צ",
+  ",": "ת",
+  ".": "ץ",
+};
+
+const LECTURE_SUBTOPICS =
+  /אפיגנט|חיידק|וירוס|גנט|פלסטיק|מיקרופלסטיק|פורנזי|ביואת|הנדסה|אפיסטמ|אוריינית/;
+
+type RoutedIntent =
+  | "greeting"
+  | "unclear"
+  | "lectures_broad"
+  | "training_broad"
+  | "apps_broad"
+  | "contact_broad"
+  | "specific";
+
+function hebrewLettersOnly(text: string) {
+  return text.replace(/[^\u0590-\u05FF]/g, "");
 }
 
-function looksUnclear(text: string) {
+function flipKeyboardLayout(text: string) {
+  return text
+    .split("")
+    .map((char) => ENGLISH_KEY_TO_HEBREW[char.toLowerCase()] ?? char)
+    .join("");
+}
+
+function resolveUserMessage(text: string) {
   const trimmed = text.trim();
-  if (!trimmed) return true;
+  if (!trimmed) return trimmed;
+  if (/[\u0590-\u05FF]/.test(trimmed)) return trimmed;
 
-  const hasHebrew = /[\u0590-\u05FF]/.test(trimmed);
-  if (!hasHebrew && trimmed.length <= 5 && /^[a-z]+$/i.test(trimmed)) {
-    return true;
+  if (/^[a-zA-Z\s.,'?!\-]+$/i.test(trimmed)) {
+    const flipped = flipKeyboardLayout(trimmed);
+    if (hebrewLettersOnly(flipped).length >= 3) {
+      return flipped;
+    }
   }
 
-  if (!hasHebrew && !/[a-z]{3,}/i.test(trimmed) && trimmed.length <= 8) {
+  return trimmed;
+}
+
+function isGreeting(text: string) {
+  const normalized = text.trim().replace(/[!?.,]+$/g, "");
+  if (
+    /^(שלום|אהלן|היי|הי|בוקר טוב|ערב טוב|מה נשמע|מה שלומך|מה קורה)$/i.test(
+      normalized
+    )
+  ) {
     return true;
   }
+  return /^(שלום|אהלן|היי|הי)[\s,]+(מה נשמע|מה שלומך|מה קורה)/i.test(normalized);
+}
 
-  return false;
+function isSpecificQuestion(text: string) {
+  const he = hebrewLettersOnly(text);
+  if (LECTURE_SUBTOPICS.test(he)) return true;
+  if (
+    /(מה זה|מהו|מה עניין|מה ב|מה לגבי|ספר|מחיר|כמה|איך|למה|מתי|הסבר|פרט|דוגמ|מי זה|ספר)/.test(
+      text
+    )
+  ) {
+    return true;
+  }
+  return /what is|tell me about|how much|how do/i.test(text);
+}
+
+function isBroadLecturesIntent(text: string) {
+  const he = hebrewLettersOnly(text);
+  if (!/הרצא/.test(he) && !/lecture/i.test(text)) return false;
+  if (isSpecificQuestion(text) && LECTURE_SUBTOPICS.test(he)) return false;
+  if (/מתעניינ/.test(he) && /הרצא/.test(he)) return true;
+  if (/^(הרצאות|הרצאה)$/.test(he)) return true;
+  if (/הרצא/.test(he) && !LECTURE_SUBTOPICS.test(he)) return true;
+  return /lectures?/i.test(text);
+}
+
+function isBroadTrainingIntent(text: string) {
+  const he = hebrewLettersOnly(text);
+  if (!/הדרכ|מורים|מורה|מפתחי חומרי|חומרי למידה/.test(he)) return false;
+  if (isSpecificQuestion(text) && /אוריינית|ביולוגיה|ספר/.test(he)) return false;
+  return true;
+}
+
+function isBroadAppsIntent(text: string) {
+  const he = hebrewLettersOnly(text);
+  if (!/אפליקצ|פיתוח/.test(he) && !/apps?/i.test(text)) return false;
+  if (isSpecificQuestion(text) && /פוטוסינתזה|אוסמוזה|אנזימים|QR|HTML/.test(text)) {
+    return false;
+  }
+  return true;
+}
+
+function isBroadContactIntent(text: string) {
+  const he = hebrewLettersOnly(text);
+  return /יצירת קשר|ליצור קשר|צור קשר|טופס|פנייה|לפנות/.test(he) ||
+    /contact/i.test(text);
+}
+
+function isTrulyUnclear(text: string) {
+  const resolved = resolveUserMessage(text);
+  const he = hebrewLettersOnly(resolved);
+  if (he.length >= 2) return false;
+  const latin = resolved.replace(/[^a-zA-Z]/g, "");
+  if (latin.length >= 4 && /[aeiou]/i.test(latin)) return false;
+  return true;
+}
+
+function detectIntent(rawText: string): RoutedIntent {
+  const text = resolveUserMessage(rawText);
+  if (!text || isTrulyUnclear(rawText)) return "unclear";
+  if (isGreeting(text)) return "greeting";
+  if (isBroadLecturesIntent(text)) return "lectures_broad";
+  if (isBroadTrainingIntent(text)) return "training_broad";
+  if (isBroadAppsIntent(text)) return "apps_broad";
+  if (isBroadContactIntent(text)) return "contact_broad";
+  return "specific";
+}
+
+function replyForIntent(intent: RoutedIntent) {
+  switch (intent) {
+    case "greeting":
+      return greetingReply;
+    case "unclear":
+      return unclearReply;
+    case "lectures_broad":
+      return lecturesPageReply;
+    case "training_broad":
+      return trainingPageReply;
+    case "apps_broad":
+      return appsPageReply;
+    case "contact_broad":
+      return contactPageReply;
+    default:
+      return null;
+  }
 }
 
 function sanitizeReply(raw: string) {
@@ -256,32 +411,31 @@ serve(async (req) => {
   }
 
   const latestUserMessage = getLatestUserMessage(payload);
-  if (looksUnclear(latestUserMessage)) {
+  const isFirstTurn = contents.length === 1;
+  const intent = detectIntent(latestUserMessage);
+
+  if (intent === "greeting" && isFirstTurn) {
+    return jsonResponse({ reply: greetingReply });
+  }
+  if (intent === "unclear") {
     return jsonResponse({ reply: unclearReply });
   }
-  if (isGreeting(latestUserMessage)) {
-    return jsonResponse({ reply: greetingReply });
+
+  const routedReply = replyForIntent(intent);
+  if (routedReply && intent !== "greeting") {
+    return jsonResponse({ reply: routedReply });
   }
 
   const systemPrompt = `
-את המזכירה הווירטואלית של אתר נורית שושני-הכל — מנומסת, חביבה, נשית ומסבירת פנים.
-יש לך חוש הומור בינוני: את יכולה לנסח תשובות בקלילות, בחיוך מילולי, ובאלגנטיות — אבל לעולם לא בציניות, לא באירוניה כלפי הפונה, ולא בניחוח מזלזל.
-הומור מותר רק כשהוא משלים מידע שמופיע במידע המאושר, ולא מחליף אותו. מותר לפעמים לסיים במשפט חמוד וקצר.
-
-כללי תוכן (חובה):
-- עני בעברית בלבד, בלשון נעימה, קצרה ובהירה. ברשימות ארוכות — תמציתיות.
-- מותר לך לענות אך ורק מתוך המידע המאושר המצורף למטה.
-- אין להמציא פרטים, מחירים, תאריכים, זמינות, טלפונים, כתובות, הבטחות, מצב אישי או יכולות שלא מופיעות במידע.
-- אל תעני על שאלות חברתיות כמו "מה שלומך" או "מה נשמע" כאילו את בן אדם. על ברכות כאלה יש להפנות בעדינות לנושאי האתר.
-- אם נשאלת על משהו שלא מופיע במידע המאושר, השיבי בדיוק (מילה במילה, בלי הומור ובלי תוספות):
+את המזכירה הווירטואלית של אתר נורית שושני-הכל — מנומסת, חביבה, עם חוש הומור בינוני.
+עני בעברית, בקצרה (עד 3–4 משפטים), רק לפי המידע המאושר למטה.
+אל תפרטי רשימות ארוכות — אם נשאלים על נושא כללי, הפני ללשונית המתאימה באתר.
+שמרי על המשכיות השיחה: התייחסי למה שכבר נאמר בפנייה.
+אין להמציא פרטים, מחירים, תאריכים, זמינות, טלפונים או הבטחות.
+אם אין תשובה במידע המאושר, השיבי בדיוק:
 ${fallbackReply}
-- אם השאלה לא מובנת, השיבי בדיוק (מילה במילה):
-${unclearReply}
 
-פורמט תשובה (חובה):
-- החזירי רק את התשובה הסופית לגולש.
-- אסור לכתוב שלבי חשיבה, כותרות באנגלית, מספור פנימי, markdown, או מילים כמו Formulate.
-- אסור לכתוב "אני בסדר גמור" או לשאול "במה אוכל לעזור לך היום" בסגנון שיחה אנושית.
+פורמט: רק תשובה סופית בעברית, בלי markdown, בלי כוכביות, בלי שלבי חשיבה באנגלית.
 
 ${siteKnowledge}
 `;
