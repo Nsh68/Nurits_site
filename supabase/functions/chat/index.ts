@@ -290,6 +290,27 @@ function replyForIntent(intent: RoutedIntent) {
   }
 }
 
+function getRecoveryReply(text: string) {
+  if (/נתקע|נקטע|נשבר|לא עובד|באמצע|מה קורה/i.test(text)) {
+    return "מצטערת על החבט! נסו לשאול שוב בקצרה, או עברו ללשונית הרלוונטית באתר. אני כאן לעזור.";
+  }
+  return null;
+}
+
+function getKnownSubtopicReply(text: string) {
+  const he = hebrewLettersOnly(text);
+  if (/אפיגנט/.test(he)) {
+    return "הרצאה על אפיגנטיקה עוסקת באופן שבו מחשבותינו, מעשינו וסביבתנו משפיעים על ביטוי הגנים בתאי גופנו, עם דוגמאות ממחקרים פורצי דרך. לפרטים נוספים — לשונית \"הרצאות לקהל הרחב\".";
+  }
+  if (/וירוס|חיידק/.test(he)) {
+    if (/ריפוי|אונקולוג|סרטן|זיהומ|ניצול/.test(he)) {
+      return "נורית מציעה הרצאה על ניצול וירוסים לריפוי מחלות זיהומיות ולריפוי מחלות אונקולוגיות, כולל סרטן. לפרטים נוספים עברו ללשונית \"הרצאות לקהל הרחב\", ואם משהו לא ברור — חזרו אליי.";
+    }
+    return 'באתר מופיעות שתי הרצאות בנושא וירוסים: האחת על חיידקים ווירוסים שחיים עלינו ובתוכנו ומשפיעים על בריאותנו, והשנייה על ניצול וירוסים לריפוי מחלות זיהומיות ואונקולוגיות. לפרטים נוספים — לשונית "הרצאות לקהל הרחב".';
+  }
+  return null;
+}
+
 function sanitizeReply(raw: string) {
   let text = raw.trim();
   if (!text) return null;
@@ -424,6 +445,17 @@ serve(async (req) => {
   const routedReply = replyForIntent(intent);
   if (routedReply && intent !== "greeting") {
     return jsonResponse({ reply: routedReply });
+  }
+
+  const resolvedMessage = resolveUserMessage(latestUserMessage);
+  const recoveryReply = getRecoveryReply(resolvedMessage);
+  if (recoveryReply) {
+    return jsonResponse({ reply: recoveryReply });
+  }
+
+  const subtopicReply = getKnownSubtopicReply(resolvedMessage);
+  if (subtopicReply) {
+    return jsonResponse({ reply: subtopicReply });
   }
 
   const systemPrompt = `

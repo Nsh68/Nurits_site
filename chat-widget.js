@@ -7,7 +7,7 @@
     "השאלה ארוכה מדי לצ'אט. אנא קצרו אותה לעד 800 תווים ושלחו שוב.";
   const welcomeMessage =
     "שלום ותודה על הפנייה! אני המזכירה של נורית — אשמח לעזור במה שמופיע באתר: הרצאות, הדרכות או אפליקציות.";
-  const storageKey = "nurit-chat-state";
+  const storageKey = "nurit-chat-state-v2";
   const maxMessageChars = 800;
   const maxMessagesForChat = 8;
   const maxStoredMessages = 40;
@@ -138,8 +138,7 @@
     } catch (error) {
       console.warn("Chat function failed:", error);
       setStatus(statusEl, unavailableMessage);
-      addMessage(list, "assistant", unavailableMessage, uiMessages);
-      saveState(uiMessages);
+      renderMessage(list, "assistant", unavailableMessage);
     } finally {
       setSending(sendButton, textarea, false);
       textarea.focus();
