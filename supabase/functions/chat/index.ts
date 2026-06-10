@@ -75,6 +75,21 @@ function jsonResponse(body: unknown, status = 200) {
   });
 }
 
+function getGeminiApiKey() {
+  return (
+    Deno.env.get("GEMINI_API_KEY") ||
+    Deno.env.get("GOOGLE_API_KEY") ||
+    Deno.env.get("API_KEY") ||
+    ""
+  ).trim();
+}
+
+function getGeminiModels() {
+  const configured = Deno.env.get("GEMINI_MODEL")?.trim();
+  const defaults = ["gemini-2.5-flash", "gemini-3.5-flash", "gemini-1.5-flash"];
+  return configured ? [configured, ...defaults.filter((m) => m !== configured)] : defaults;
+}
+
 function normalizeRole(role: unknown) {
   return role === "assistant" || role === "model" ? "model" : "user";
 }
@@ -148,9 +163,9 @@ serve(async (req) => {
     return jsonResponse({ error: "Method not allowed" }, 405);
   }
 
-  const apiKey = Deno.env.get("GEMINI_API_KEY");
+  const apiKey = getGeminiApiKey();
   if (!apiKey) {
-    return jsonResponse({ error: "GEMINI_API_KEY is not configured" }, 500);
+    return jsonResponse({ error: "Gemini API key is not configured" }, 500);
   }
 
   let payload: Record<string, unknown>;
@@ -180,30 +195,45 @@ ${fallbackReply}
 ${siteKnowledge}
 `;
 
-  const model = Deno.env.get("GEMINI_MODEL") || "gemini-1.5-flash";
-  const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
-    model
-  )}:generateContent?key=${encodeURIComponent(apiKey)}`;
-
-  const geminiResponse = await fetch(geminiUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      systemInstruction: {
-        parts: [{ text: systemPrompt }],
-      },
-      contents,
-      generationConfig: {
-        temperature: 0.2,
-        topP: 0.8,
-        maxOutputTokens,
-      },
-    }),
+  const requestBody = JSON.stringify({
+    systemInstruction: {
+      parts: [{ text: systemPrompt }],
+    },
+    contents,
+    generationConfig: {
+      temperature: 0.2,
+      topP: 0.8,
+      maxOutputTokens,
+    },
   });
 
-  if (!geminiResponse.ok) {
-    const detail = await geminiResponse.text();
-    console.error("Gemini chat request failed:", detail);
+  let geminiResponse: Response | null = null;
+  let lastError = "";
+
+  for (const model of getGeminiModels()) {
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
+      model
+    )}:generateContent`;
+
+    const response = await fetch(geminiUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": apiKey,
+      },
+      body: requestBody,
+    });
+
+    if (response.ok) {
+      geminiResponse = response;
+      break;
+    }
+
+    lastError = await response.text();
+    console.error(`Gemini chat request failed for ${model}:`, lastError);
+  }
+
+  if (!geminiResponse) {
     return jsonResponse({ error: "Chat service unavailable" }, 502);
   }
 

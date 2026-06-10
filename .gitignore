@@ -1,1 +1,11 @@
-supabase-config.js
+# Dependencies (Supabase CLI via npm)
+node_modules/
+
+# Supabase local link/cache files
+supabase/.temp/
+
+# Local test scripts (if created during debugging)
+_test-*.mjs
+
+# Optional local doc backups
+*.local.bak.md

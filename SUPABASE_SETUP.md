@@ -1,5 +1,19 @@
 # חיבור טופס יצירת קשר ל-Supabase
 
+**עדכון:** 8 ביוני 2026
+
+מסמך זה משלים את [PRD.md](PRD.md) ומתאר הגדרת Supabase, מייל והצ'אט.
+
+---
+
+## 0. לפני שמתחילים
+
+- `supabase-config.js` **אינו** ב-git (ראי `.gitignore`) — צרי אותו מקומית מ-`supabase-config.example.js`
+- האתר חייב לרוץ דרך שרת HTTP (`http://localhost:8080`) — לא `file://`
+- נכס `assets/contact-thanks-clownfish.png` קיים לתמונת מסך תודה — עדיין לא מחובר ב-`contact.html`
+
+---
+
 ## 1. יצירת פרויקט ב-Supabase
 
 1. היכנסי ל-[https://supabase.com](https://supabase.com) וצרי פרויקט חדש.
@@ -76,7 +90,9 @@ supabase functions deploy send-contact-email
 
 ## 6. צ'אט בסיסי עם Gemini Flash
 
-באתר נוסף ווידג'ט צ'אט קטן שמופיע בכל העמודים. קוד הווידג'ט נמצא ב-`chat-widget.js`. הדפדפן קורא ל-Supabase Edge Function בשם `chat`, והפונקציה קוראת ל-Gemini Flash בצד השרת בלבד. אין לשים מפתח Gemini בקבצי האתר.
+באתר יש ווידג'ט צ'אט (`chat-widget.js`) שנטען כיום **רק ב-`contact.html`**. (במפרט המקורי — בכל הלשוניות; ניתן להוסיף `<script src="chat-widget.js">` לשאר הדפים.)
+
+הדפדפן קורא ל-Supabase Edge Function בשם `chat`, והפונקציה קוראת ל-Gemini Flash בצד השרת בלבד. אין לשים מפתח Gemini בקבצי האתר.
 
 הפונקציה נמצאת ב-`supabase/functions/chat/index.ts` וכוללת קונטקסט עברי קצר מתוך תכני האתר. הבוט מונחה לענות רק לפי המידע הזה. אם המידע אינו מופיע באתר, עליו לענות:  
 `איני יודעת לענות על כך מתוך המידע הקיים באתר. נשמח לחזור אליכם בנושא זה טלפונית.`
