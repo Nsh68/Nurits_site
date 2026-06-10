@@ -112,7 +112,7 @@
     panel.hidden = true;
 
     const header = createElement("div", "chat-widget__header");
-    const title = createElement("div", "chat-widget__title", "עוזרת האתר");
+    const title = createElement("div", "chat-widget__title", "המזכירה של נורית");
     const close = createElement("button", "chat-widget__close", "×");
     close.type = "button";
     close.setAttribute("aria-label", "סגירת הצ'אט");
@@ -123,7 +123,7 @@
     addMessage(
       list,
       "assistant",
-      "שלום, אני כאן כדי לענות בקצרה על מידע שמופיע באתר."
+      "שלום ותודה על הפנייה! אני המזכירה של נורית — אשמח לעזור במה שמופיע באתר: הרצאות, הדרכות או אפליקציות."
     );
 
     const statusEl = createElement("p", "chat-widget__status");

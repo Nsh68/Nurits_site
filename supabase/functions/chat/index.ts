@@ -9,12 +9,16 @@ const corsHeaders = {
 
 const fallbackReply =
   "איני יודעת לענות על כך מתוך המידע הקיים באתר. נשמח לחזור אליכם בנושא זה טלפונית.";
+const unclearReply =
+  "לא הצלחתי להבין את השאלה. אפשר לנסח שוב? אני יכולה לעזור בנושאי האתר — הרצאות, הדרכות, אפליקציות או יצירת קשר.";
+const greetingReply =
+  "שלום ותודה על הפנייה! אני כאן לעזור במה שמופיע באתר — הרצאות, הדרכות או אפליקציות. במה תרצו לשמוע?";
 const tooLongMessage =
   "השאלה ארוכה מדי לצ'אט. אנא קצרו אותה לעד 800 תווים ושלחו שוב.";
 const maxMessageChars = 800;
 const maxMessagesForGemini = 8;
 const maxHistoryMessages = 6;
-const maxOutputTokens = 300;
+const maxOutputTokens = 650;
 
 const siteKnowledge = `
 מידע מאושר מתוך אתר נורית שושני-הכל:
@@ -88,6 +92,72 @@ function getGeminiModels() {
   const configured = Deno.env.get("GEMINI_MODEL")?.trim();
   const defaults = ["gemini-2.5-flash", "gemini-3.5-flash", "gemini-1.5-flash"];
   return configured ? [configured, ...defaults.filter((m) => m !== configured)] : defaults;
+}
+
+function getLatestUserMessage(payload: Record<string, unknown>) {
+  if (Array.isArray(payload.messages)) {
+    for (let i = payload.messages.length - 1; i >= 0; i -= 1) {
+      const message = payload.messages[i] as ChatMessage;
+      if (message?.role === "user" && typeof message.content === "string") {
+        return message.content.trim();
+      }
+    }
+  }
+
+  if (typeof payload.message === "string") {
+    return payload.message.trim();
+  }
+
+  return "";
+}
+
+function isGreeting(text: string) {
+  const normalized = text.trim().replace(/[!?.,]+$/g, "");
+  return /^(שלום|אהלן|היי|הי|בוקר טוב|ערב טוב|מה נשמע|מה שלומך|מה קורה)$/i.test(
+      normalized
+    ) ||
+    /^(שלום|אהלן|היי)[\s,]+(מה נשמע|מה שלומך|מה קורה)$/i.test(normalized);
+}
+
+function looksUnclear(text: string) {
+  const trimmed = text.trim();
+  if (!trimmed) return true;
+
+  const hasHebrew = /[\u0590-\u05FF]/.test(trimmed);
+  if (!hasHebrew && trimmed.length <= 5 && /^[a-z]+$/i.test(trimmed)) {
+    return true;
+  }
+
+  if (!hasHebrew && !/[a-z]{3,}/i.test(trimmed) && trimmed.length <= 8) {
+    return true;
+  }
+
+  return false;
+}
+
+function sanitizeReply(raw: string) {
+  let text = raw.trim();
+  if (!text) return null;
+
+  const leakedReasoning =
+    /formulate the response|step \d+|^\d+\.\s*\*+/im.test(text) ||
+    (/^[a-z0-9 ._-]+$/i.test(text) && !/[\u0590-\u05FF]/.test(text));
+
+  if (leakedReasoning) {
+    const hebrewOnly = text
+      .split(/\n+/)
+      .map((line) => line.trim())
+      .filter((line) => /[\u0590-\u05FF]/.test(line) && !/formulate|step \d/i.test(line));
+    text = hebrewOnly.join("\n").trim();
+  }
+
+  text = text
+    .replace(/^\d+\.\s*\*\*[^*]+\*\*\s*/gim, "")
+    .replace(/\*\*/g, "")
+    .trim();
+
+  if (!text || /formulate the response/i.test(text)) return null;
+  return text;
 }
 
 function normalizeRole(role: unknown) {
@@ -185,12 +255,33 @@ serve(async (req) => {
     return jsonResponse({ error: "Missing message content" }, 400);
   }
 
+  const latestUserMessage = getLatestUserMessage(payload);
+  if (looksUnclear(latestUserMessage)) {
+    return jsonResponse({ reply: unclearReply });
+  }
+  if (isGreeting(latestUserMessage)) {
+    return jsonResponse({ reply: greetingReply });
+  }
+
   const systemPrompt = `
-את עוזרת וירטואלית ידידותית, מנומסת ונשית של אתר נורית שושני-הכל.
-עני בעברית בלבד, בלשון נעימה, קצרה ובהירה.
-מותר לך לענות רק מתוך המידע המאושר המצורף. אין להמציא פרטים, מחירים, תאריכים, זמינות, טלפונים, כתובות או הבטחות שאינם מופיעים במידע.
-אם אין במידע המאושר תשובה ברורה לשאלה, השיבי בדיוק:
+את המזכירה הווירטואלית של אתר נורית שושני-הכל — מנומסת, חביבה, נשית ומסבירת פנים.
+יש לך חוש הומור בינוני: את יכולה לנסח תשובות בקלילות, בחיוך מילולי, ובאלגנטיות — אבל לעולם לא בציניות, לא באירוניה כלפי הפונה, ולא בניחוח מזלזל.
+הומור מותר רק כשהוא משלים מידע שמופיע במידע המאושר, ולא מחליף אותו. מותר לפעמים לסיים במשפט חמוד וקצר.
+
+כללי תוכן (חובה):
+- עני בעברית בלבד, בלשון נעימה, קצרה ובהירה. ברשימות ארוכות — תמציתיות.
+- מותר לך לענות אך ורק מתוך המידע המאושר המצורף למטה.
+- אין להמציא פרטים, מחירים, תאריכים, זמינות, טלפונים, כתובות, הבטחות, מצב אישי או יכולות שלא מופיעות במידע.
+- אל תעני על שאלות חברתיות כמו "מה שלומך" או "מה נשמע" כאילו את בן אדם. על ברכות כאלה יש להפנות בעדינות לנושאי האתר.
+- אם נשאלת על משהו שלא מופיע במידע המאושר, השיבי בדיוק (מילה במילה, בלי הומור ובלי תוספות):
 ${fallbackReply}
+- אם השאלה לא מובנת, השיבי בדיוק (מילה במילה):
+${unclearReply}
+
+פורמט תשובה (חובה):
+- החזירי רק את התשובה הסופית לגולש.
+- אסור לכתוב שלבי חשיבה, כותרות באנגלית, מספור פנימי, markdown, או מילים כמו Formulate.
+- אסור לכתוב "אני בסדר גמור" או לשאול "במה אוכל לעזור לך היום" בסגנון שיחה אנושית.
 
 ${siteKnowledge}
 `;
@@ -201,8 +292,8 @@ ${siteKnowledge}
     },
     contents,
     generationConfig: {
-      temperature: 0.2,
-      topP: 0.8,
+      temperature: 0.4,
+      topP: 0.85,
       maxOutputTokens,
     },
   });
@@ -238,11 +329,12 @@ ${siteKnowledge}
   }
 
   const geminiData = await geminiResponse.json();
-  const reply =
+  const rawReply =
     geminiData?.candidates?.[0]?.content?.parts
       ?.map((part: { text?: string }) => part.text || "")
       .join("")
-      .trim() || fallbackReply;
+      .trim() || "";
+  const reply = sanitizeReply(rawReply) || fallbackReply;
 
   return jsonResponse({ reply });
 });
