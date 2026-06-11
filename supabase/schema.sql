@@ -29,3 +29,6 @@ create policy "Anyone can submit contact form"
   with check (true);
 
 -- אין מדיניות SELECT ל-anon — הצפייה רק דרך לוח הבקרה של Supabase (service role)
+
+-- משובי משתתפים (QR): הריצי גם את supabase/migrations/20260611_participant_feedback.sql
+-- תפריט status: supabase/migrations/20260612_participant_feedback_status_enum.sql

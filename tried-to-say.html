@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="description" content="שליחת משוב — התנסינו ורצינו לומר" />
+  <title>התנסינו ורצינו לומר | נורית שושני-הכל</title>
+  <link rel="stylesheet" href="styles.css?v=20260611a" />
+</head>
+<body class="page-tried-to-say">
+  <a class="skip-link" href="#main">דלג לתוכן</a>
+  <header class="site-header">
+    <nav class="nav" aria-label="ניווט ראשי">
+      <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="nav-menu">
+        <span class="nav__toggle-bar"></span><span class="nav__toggle-bar"></span><span class="nav__toggle-bar"></span>
+        <span class="visually-hidden">תפריט</span>
+      </button>
+      <ul class="nav__menu" id="nav-menu">
+        <li><a href="index.html">נורית שושני-הכל</a></li>
+        <li><a href="lectures.html">הרצאות לקהל הרחב</a></li>
+        <li><a href="training.html">הדרכות מורים ומפתחי חומרי למידה</a></li>
+        <li><a href="apps.html">פיתוח אפליקציות</a></li>
+        <li><a href="testimonials.html">משובים</a></li>
+        <li><a href="contact.html">יצירת קשר</a></li>
+      </ul>
+    </nav>
+  </header>
+  <main id="main" class="page page--tried-to-say">
+    <div class="page-home__overlay" aria-hidden="true"></div>
+    <div class="container tried-to-say-page__inner">
+      <h1 class="tried-to-say-page__title">התנסינו ורצינו לומר</h1>
+      <p class="tried-to-say-page__intro">נשמח לשמוע על החוויה שלכם אחרי ההרצאה, הסדנה או המפגש.</p>
+
+      <form id="feedback-form" class="feedback-form contact-form contact-form--compact" novalidate>
+        <fieldset class="feedback-form__fieldset">
+          <legend class="feedback-form__legend">הסכמה לפרסום</legend>
+          <div class="feedback-form__field">
+            <span class="feedback-form__label" id="consent-publish-label">האם אתם מסכימים שהמשוב שלכם יעלה לאתר?</span>
+            <div class="feedback-form__radios" role="radiogroup" aria-labelledby="consent-publish-label">
+              <label class="feedback-form__radio"><input type="radio" name="consent-publish" value="yes" required /> כן</label>
+              <label class="feedback-form__radio"><input type="radio" name="consent-publish" value="no" required /> לא</label>
+            </div>
+          </div>
+          <div id="display-name-group" class="feedback-form__field" hidden>
+            <span class="feedback-form__label" id="display-name-label">פרסום השם באתר</span>
+            <div class="feedback-form__radios" role="radiogroup" aria-labelledby="display-name-label">
+              <label class="feedback-form__radio"><input type="radio" name="display-name" value="full" /> שם מלא</label>
+              <label class="feedback-form__radio"><input type="radio" name="display-name" value="anonymous" /> אנונימי</label>
+            </div>
+          </div>
+        </fieldset>
+
+        <div class="contact-form__field">
+          <label for="full-name">שם מלא</label>
+          <input type="text" id="full-name" name="full-name" required autocomplete="name" spellcheck="true" lang="he" />
+        </div>
+        <div class="contact-form__field">
+          <label for="email">דוא"ל</label>
+          <input type="email" id="email" name="email" required autocomplete="email" inputmode="email" lang="en" dir="ltr" aria-describedby="email-hint email-error" />
+          <p id="email-error" class="contact-form__field-error" role="alert" hidden></p>
+          <p id="email-hint" class="contact-form__hint">למענה אישי במידת הצורך — לא יפורסם באתר. כתבו באנגלית בלבד (למשל name@gmail.com).</p>
+        </div>
+        <div class="contact-form__field">
+          <label for="event-date">תאריך</label>
+          <input type="date" id="event-date" name="event-date" required />
+        </div>
+        <div id="category-field" class="contact-form__field">
+          <label for="category">סוג ההתנסות</label>
+          <select id="category" name="category" required>
+            <option value="">בחרו</option>
+            <option value="public-lecture">הרצאות לקהל הרחב</option>
+            <option value="teachers">הדרכות ומשובי מורים</option>
+            <option value="app-development">פיתוח אפליקציות</option>
+          </select>
+        </div>
+        <div id="session-type-field" class="contact-form__field" hidden>
+          <label for="session-type">סוג המפגש</label>
+          <select id="session-type" name="session-type">
+            <option value="">בחרו</option>
+            <option value="lecture">הרצאה</option>
+            <option value="workshop">סדנה</option>
+            <option value="lecture-workshop">הרצאה + סדנה</option>
+          </select>
+        </div>
+        <fieldset id="teacher-audience-field" class="feedback-form__fieldset" hidden>
+          <legend class="feedback-form__legend">מורים ל:</legend>
+          <div class="feedback-form__radios">
+            <label class="feedback-form__radio">
+              <input type="radio" name="teacher-audience" value="single-subject" />
+              ציון המקצוע
+            </label>
+            <label class="feedback-form__radio">
+              <input type="radio" name="teacher-audience" value="multi-subject" />
+              מגוון מקצועות
+            </label>
+          </div>
+          <div id="subject-name-field" class="contact-form__field" hidden>
+            <label for="subject-name">ציון המקצוע</label>
+            <input type="text" id="subject-name" name="subject-name" placeholder="למשל: ביולוגיה" spellcheck="true" lang="he" />
+          </div>
+        </fieldset>
+        <div class="contact-form__field">
+          <label for="experience-text">באיזה פעילות השתתפתם ואיך היה? אשמח לכל הערה.</label>
+          <textarea
+            id="experience-text"
+            name="experience-text"
+            rows="5"
+            required
+            spellcheck="true"
+            lang="he"
+            maxlength="2000"
+          ></textarea>
+          <p id="word-count" class="contact-form__hint" aria-live="polite">0 / 150 מילים</p>
+          <p class="contact-form__hint contact-form__hint--spell">
+            בדיקת איות: מילים עם קו אדום — לחצו עליהן לחיצה ימנית לתיקון (דורש עברית מותקנת בדפדפן).
+          </p>
+          <p id="experience-quality-hint" class="contact-form__hint contact-form__hint--warn" hidden aria-live="polite">
+            נראה שיש טקסט לא ברור או שגיאות — מומלץ לקרוא שוב ולתקן לפני השליחה.
+          </p>
+        </div>
+        <p class="feedback-form__reread">קראו שוב את המשוב לפני השליחה.</p>
+        <p id="feedback-error" class="contact-form__error" role="alert" hidden></p>
+        <div id="feedback-warnings" class="feedback-warnings" hidden role="status">
+          <p id="feedback-warning-text" class="feedback-warnings__text"></p>
+          <div class="feedback-warnings__actions">
+            <button type="button" id="feedback-warning-fix" class="feedback-warnings__btn feedback-warnings__btn--fix">חזרה לתיקון</button>
+            <button type="button" id="feedback-warning-proceed" class="feedback-warnings__btn feedback-warnings__btn--proceed">שליחה בכל זאת</button>
+          </div>
+        </div>
+        <button type="submit" class="contact-form__submit--incomplete" aria-disabled="true">שליחת משוב</button>
+      </form>
+
+      <div id="feedback-thanks" class="feedback-thanks" hidden tabindex="-1">
+        <p class="feedback-thanks__message">תודה! קיבלנו את המשוב שלכם.</p>
+        <p id="feedback-thanks-published" class="feedback-thanks__published" hidden></p>
+        <p class="feedback-thanks__email-note">נשלח אליכם אישור לדוא"ל.</p>
+      </div>
+    </div>
+  </main>
+  <footer class="site-footer"><div class="container"><p>This site was built by Nurit Shoshani-Hechel</p></div></footer>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="script.js"></script>
+  <script src="tried-to-say.js?v=20260612d"></script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="משובים ממשתתפים — נורית שושני-הכל" />
+  <title>משובים | נורית שושני-הכל</title>
+  <link rel="stylesheet" href="styles.css?v=20260611a" />
+</head>
+<body>
+  <a class="skip-link" href="#main">דלג לתוכן</a>
+  <header class="site-header">
+    <nav class="nav" aria-label="ניווט ראשי">
+      <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="nav-menu">
+        <span class="nav__toggle-bar"></span><span class="nav__toggle-bar"></span><span class="nav__toggle-bar"></span>
+        <span class="visually-hidden">תפריט</span>
+      </button>
+      <ul class="nav__menu" id="nav-menu">
+        <li><a href="index.html">נורית שושני-הכל</a></li>
+        <li><a href="lectures.html">הרצאות לקהל הרחב</a></li>
+        <li><a href="training.html">הדרכות מורים ומפתחי חומרי למידה</a></li>
+        <li><a href="apps.html">פיתוח אפליקציות</a></li>
+        <li><a class="nav__link--active" href="testimonials.html">משובים</a></li>
+        <li><a href="contact.html">יצירת קשר</a></li>
+      </ul>
+    </nav>
+  </header>
+  <main id="main" class="page page--testimonials">
+    <div class="page-home__overlay" aria-hidden="true"></div>
+    <div class="container testimonials-page__inner">
+      <h1 class="testimonials-page__title">משובים</h1>
+      <p class="testimonials-page__intro">תגובות ממשתתפים אחרי הרצאות, הדרכות ומפגשים — «התנסינו ורצינו לומר».</p>
+
+      <section id="public" class="testimonials-zone" aria-labelledby="public-title">
+        <h2 id="public-title" class="testimonials-zone__title">הרצאות לקהל הרחב</h2>
+        <div class="testimonials-gallery" data-gallery="public-lecture" hidden></div>
+        <div class="testimonials-list" data-list="public-lecture" aria-live="polite">
+          <p class="testimonials-loading">טוען משובים…</p>
+        </div>
+      </section>
+
+      <section id="teachers" class="testimonials-zone" aria-labelledby="teachers-title">
+        <h2 id="teachers-title" class="testimonials-zone__title">הדרכות ומשובי מורים</h2>
+        <div class="testimonials-gallery" data-gallery="teachers" hidden></div>
+        <div class="testimonials-list" data-list="teachers" aria-live="polite">
+          <p class="testimonials-loading">טוען משובים…</p>
+        </div>
+      </section>
+
+      <section id="apps" class="testimonials-zone" aria-labelledby="apps-title">
+        <h2 id="apps-title" class="testimonials-zone__title">פיתוח אפליקציות</h2>
+        <div class="testimonials-gallery" data-gallery="app-development" hidden></div>
+        <div class="testimonials-list" data-list="app-development" aria-live="polite">
+          <p class="testimonials-loading">טוען משובים…</p>
+        </div>
+      </section>
+    </div>
+  </main>
+  <footer class="site-footer"><div class="container"><p>This site was built by Nurit Shoshani-Hechel</p></div></footer>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="script.js"></script>
+  <script src="testimonials.js?v=20260611a"></script>
+  <script src="chat-widget.js?v=20260612"></script>
+</body>
+</html>
