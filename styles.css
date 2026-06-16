@@ -796,6 +796,7 @@ main {
     max-width: min(100%, 520px);
     max-height: min(78vh, 560px);
     transform: none;
+    margin-top: 80px;
   }
 
   .page--training .training-testimonials {
@@ -1241,6 +1242,7 @@ main {
   position: relative;
   top: auto;
   left: auto;
+  margin-top: 80px;
 }
 
 .page--training .training-testimonials {

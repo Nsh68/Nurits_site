@@ -27,6 +27,7 @@ const maxMessageChars = 800;
 const maxMessagesForGemini = 8;
 const maxHistoryMessages = 6;
 const maxOutputTokens = 500;
+const maxLectureContextChars = 12000;
 
 const siteKnowledge = `
 מידע מאושר מתוך אתר נורית שושני-הכל:
@@ -453,14 +454,33 @@ serve(async (req) => {
     return jsonResponse({ reply: recoveryReply });
   }
 
-  const subtopicReply = getKnownSubtopicReply(resolvedMessage);
-  if (subtopicReply) {
-    return jsonResponse({ reply: subtopicReply });
+  const lectureContext =
+    typeof payload.lectureContext === "string"
+      ? payload.lectureContext.trim().slice(0, maxLectureContextChars)
+      : "";
+
+  if (!lectureContext) {
+    const subtopicReply = getKnownSubtopicReply(resolvedMessage);
+    if (subtopicReply) {
+      return jsonResponse({ reply: subtopicReply });
+    }
   }
+
+  const lectureKnowledge = lectureContext
+    ? `
+
+מידע מפורט מהרצאות (השתמשי בו לשאלות על הנושא הספציפי; אל תמציאי מעבר למה שכתוב כאן):
+${lectureContext}
+`
+    : "";
+
+  const answerLengthHint = lectureContext
+    ? "עני בעברית, בקצרה ובבהירות (עד 5–6 משפטים), לפי המידע המאושר והמידע המפורט מהרצאות."
+    : "עני בעברית, בקצרה (עד 3–4 משפטים), רק לפי המידע המאושר למטה.";
 
   const systemPrompt = `
 את המזכירה הווירטואלית של אתר נורית שושני-הכל — מנומסת, חביבה, עם חוש הומור בינוני.
-עני בעברית, בקצרה (עד 3–4 משפטים), רק לפי המידע המאושר למטה.
+${answerLengthHint}
 אל תפרטי רשימות ארוכות — אם נשאלים על נושא כללי, הפני ללשונית המתאימה באתר.
 שמרי על המשכיות השיחה: התייחסי למה שכבר נאמר בפנייה.
 אין להמציא פרטים, מחירים, תאריכים, זמינות, טלפונים או הבטחות.
@@ -469,7 +489,7 @@ ${fallbackReply}
 
 פורמט: רק תשובה סופית בעברית, בלי markdown, בלי כוכביות, בלי שלבי חשיבה באנגלית.
 
-${siteKnowledge}
+${siteKnowledge}${lectureKnowledge}
 `;
 
   const requestBody = JSON.stringify({
