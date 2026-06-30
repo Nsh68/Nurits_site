@@ -561,6 +561,20 @@ main {
   line-height: 1.45;
 }
 
+.contact-form__field-error[hidden] {
+  display: none !important;
+}
+
+.contact-form__field-error.is-visible {
+  display: block;
+}
+
+.page--contact .contact-form--compact .contact-form__field-error {
+  margin-top: 0.2rem;
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
 .contact-form__input--error {
   border-color: #c44 !important;
   box-shadow: 0 0 0 2px rgba(204, 68, 68, 0.15);

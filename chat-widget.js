@@ -33,7 +33,7 @@
       },
     },
     {
-      path: "assets/גנטיקה בסיסית.txt",
+      path: "assets/basic genetic lecture.txt",
       label: "הרצאה על גנטיקה בסיסית",
       match(text) {
         if (/אפיגנט|מיקרוב|חיידק|וירוס|ווירוס|הנדסה גנטית/i.test(text)) {
@@ -43,12 +43,27 @@
         return /(?:^|\s)גנטיק(?:ה|ת)\b|תורש(?:ה|ת)|מנדל|דנ\"א|\bdna\b/i.test(text);
       },
     },
+    {
+      path: "assets/Genetic engineering lecture.txt",
+      label: "הרצאה על הנדסה גנטית",
+      match(text) {
+        return /הנדסה גנטית|genetic engineering/i.test(text);
+      },
+    },
+    {
+      path: "assets/Pricing.txt",
+      label: "מחירי הרצאות וסדנאות",
+      match(text) {
+        return /מחיר|עלות|כמה עול|תמחור|pricing|price/i.test(text);
+      },
+    },
   ];
 
   let client = null;
   let isSending = false;
   const history = [];
   const loadedAssets = new Map();
+  const sentContextPaths = new Set();
 
   function getSupabaseClient() {
     if (client) return client;
@@ -101,6 +116,7 @@
     list.textContent = "";
     renderMessage(list, "assistant", welcomeMessage);
     loadedAssets.clear();
+    sentContextPaths.clear();
     clearPersistedState();
   }
 
@@ -150,11 +166,15 @@
     const sources = getMatchingSources(matchText);
     if (!sources.length) return null;
 
+    const newSources = sources.filter((source) => !sentContextPaths.has(source.path));
+    if (!newSources.length) return null;
+
     const sections = [];
-    for (const source of sources) {
+    for (const source of newSources) {
       const content = await loadAsset(source.path);
       if (content) {
         sections.push(`=== ${source.label} ===\n${content}`);
+        sentContextPaths.add(source.path);
       }
     }
 

@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta name="description" content="יצירת קשר — נורית שושני-הכל" />
   <title>יצירת קשר | נורית שושני-הכל</title>
-  <link rel="stylesheet" href="styles.css?v=20260602j" />
+  <link rel="stylesheet" href="styles.css?v=20260618" />
 </head>
 <body class="page-contact">
   <a class="skip-link" href="#main">דלג לתוכן</a>
@@ -40,11 +40,13 @@
         <div class="contact-form__row">
           <div class="contact-form__field">
             <label for="phone">טלפון סלולרי</label>
-            <input type="tel" id="phone" name="phone" required autocomplete="tel" />
+            <input type="tel" id="phone" name="phone" required autocomplete="tel" inputmode="tel" aria-describedby="phone-error" />
+            <p id="phone-error" class="contact-form__field-error" role="alert" hidden></p>
           </div>
           <div class="contact-form__field">
             <label for="email">דוא"ל</label>
-            <input type="email" id="email" name="email" required autocomplete="email" />
+            <input type="email" id="email" name="email" required autocomplete="email" inputmode="email" lang="en" dir="ltr" aria-describedby="email-error" />
+            <p id="email-error" class="contact-form__field-error" role="alert" hidden></p>
           </div>
         </div>
         <div class="contact-form__row contact-form__row--topic">
@@ -83,7 +85,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
   <script src="script.js"></script>
-  <script src="contact.js"></script>
-  <script src="chat-widget.js?v=20260617"></script>
+  <script src="contact.js?v=20260618b"></script>
+  <script src="chat-widget.js?v=20260701"></script>
 </body>
 </html>

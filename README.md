@@ -17,16 +17,22 @@
 ## הרצה מקומית
 
 ```bash
-python -m http.server 8080
+npm start
+# או: python -m http.server 8080
 ```
 
 פתחי `http://localhost:8080` — לטופס יצירת קשר נדרש שרת (לא `file://`).
 
 לפני שליחת טופס: העתיקי `supabase-config.example.js` ל-`supabase-config.js` ומלאי מפתחות Supabase.
 
+## פריסה (Vercel)
+
+ראו [VERCEL_DEPLOY.md](VERCEL_DEPLOY.md).
+
 ## תיעוד
 
 - [PRD.md](PRD.md) — דרישות מוצר וסטטוס יישום
+- [VERCEL_DEPLOY.md](VERCEL_DEPLOY.md) — Supabase מחדש + פריסה ב-Vercel
 - [TESTIMONIALS.md](TESTIMONIALS.md) — מפרט «ניסינו ורצינו לומר» / דף משובים
 - [TASKS_2026-06-11.md](TASKS_2026-06-11.md) — משימות יישום (צ'אט + משובים)
 - [PHASE1_IMPLEMENTATION.md](PHASE1_IMPLEMENTATION.md) — פאזות פיתוח
@@ -35,7 +41,7 @@ python -m http.server 8080
 
 ## טכנולוגיות
 
-HTML · CSS · JavaScript · Supabase · Edge Functions · Gemini Flash
+HTML · CSS · JavaScript · Supabase · Edge Functions · Gemini Flash · Vercel
 
 ## רישיון / זכויות
 

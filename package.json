@@ -1,4 +1,8 @@
 {
+  "scripts": {
+    "build": "node scripts/generate-supabase-config.mjs",
+    "start": "python -m http.server 8080"
+  },
   "devDependencies": {
     "supabase": "^2.105.0"
   }

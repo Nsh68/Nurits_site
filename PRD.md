@@ -1,7 +1,7 @@
 # PRD — אתר נורית שושני-הכל
 
-**גרסה:** 1.3  
-**עדכון אחרון:** 11 ביוני 2026 (מודל משובים: פרסום מיידי + הסכמה)  
+**גרסה:** 1.4  
+**עדכון אחרון:** 1 ביולי 2026 (Supabase מחדש, Vercel, צ'אט חסכוני, ולידציית טופס)  
 **מקור דרישות:** `siteDescription`, `assets/nuritSH.docx`, משוב משתמש
 
 ---
@@ -14,7 +14,11 @@
 - הצגת מומחיות, שירותים ופרויקטים לקהל מורים, מוסדות ולקוחות פרטיים
 - איסוף פניות דרך טופס יצירת קשר
 - איסוף והצגת משובי משתתפים («ניסינו ורצינו לומר») — **מתוכנן, טרם מיושם**
-- מענה בסיסי בצ'אט על בסיס תוכן האתר
+- מענה בסיסי בצ'אט על בסיס תוכן האתר (קבצי הרצאות + מחירים — טעינה לפי צורך)
+
+**סטטוס תשתית (יולי 2026):**
+- פרויקט Supabase **הושהה** עקב חוסר שימוש — נדרש **שחזור / חיבור מחדש** (ראו [VERCEL_DEPLOY.md](VERCEL_DEPLOY.md) §א)
+- **פריסה מתוכננת:** Vercel (במקום GitHub Pages) — ראו [VERCEL_DEPLOY.md](VERCEL_DEPLOY.md) §ב
 
 ---
 
@@ -31,7 +35,7 @@
 
 ## 3. מבנה האתר
 
-### 3.1 דפים קיימים (5)
+### 3.1 דפים קיימים (6)
 
 | # | קובץ | כותרת ניווט | רקע | סטטוס |
 |---|------|-------------|-----|--------|
@@ -40,12 +44,12 @@
 | 3 | `training.html` | הדרכות מורים ומפתחי חומרי למידה | `sea2.png` | ✅ הושלם |
 | 4 | `apps.html` | פיתוח אפליקציות | `sea2.png` | ✅ הושלם |
 | 5 | `contact.html` | יצירת קשר | `sea1.png` | ✅ הושלם |
+| 6 | `testimonials.html` | משובים | `sea2.png` | ✅ דף + JS — תלוי Supabase לנתונים |
 
-### 3.2 דפים מתוכננים — משובים (2)
+### 3.2 דפים מתוכננים — משובים (1)
 
 | # | קובץ | כותרת ניווט | תפקיד | סטטוס |
 |---|------|-------------|--------|--------|
-| 6 | `testimonials.html` | משובים | תצוגה ציבורית — 3 אזורים לפי סוג שירות | ⏳ מתוכנן |
 | 7 | `tried-to-say.html` | *(לא בתפריט)* | טופס שליחה — נפתח מ-QR בסוף מפגש | ⏳ מתוכנן |
 
 מפרט מלא: [TESTIMONIALS.md](TESTIMONIALS.md)
@@ -84,12 +88,14 @@
 ### 4.5 יצירת קשר (`contact.html`)
 - שדות: שם מלא, טלפון, דוא"ל, נושא (select), נושא נוסף, הודעה (עד 200 מילים)
 - ולידציה בזמן אמת; כפתור שליחה מושבת עד מילוי חובה
+- **ולידציית דוא"ל:** הודעות שגיאה מתחת לשדה בזמן הקלדה (פורמט, תווים בעברית, @)
+- **ולידציית טלפון:** מספר סלולרי ישראלי — **בדיקה והודעה רק בלחיצה על שליחה**
 - שמירה ב-Supabase (`contact_inquiries`) + התראת מייל (Edge Function)
 - מסך תודה: `contact-thanks` עם הודעה בעברית
 - נכס `assets/contact-thanks-clownfish.png` קיים — **עדיין לא מחובר ל-HTML**
-- ווידג'ט צ'אט (`chat-widget.js`) — בכל הדפים
+- ווידג'ט צ'אט (`chat-widget.js`) — **בכל הדפים**
 
-### 4.6 משובים — תצוגה (`testimonials.html`) ⏳ מתוכנן
+### 4.6 משובים — תצוגה (`testimonials.html`) ✅ דף קיים — תלוי Supabase
 
 - כותרת: **משובים** — **תצוגה בלבד** (אין טופס שליחה מהאתר)
 - **3 אזורים** (מבנה מקביל ללשוניות האתר):
@@ -190,16 +196,34 @@
 | שכבה | טכנולוגיה | קבצים עיקריים |
 |------|-----------|----------------|
 | פרונט | HTML5, CSS3, Vanilla JS | `*.html`, `styles.css`, `script.js` |
-| טופס | Supabase JS v2 | `contact.js`, `supabase-config.js` (מקומי, לא ב-git) |
+| אירוח | **Vercel** (סטטי) | `vercel.json`, `scripts/generate-supabase-config.mjs` |
+| טופס | Supabase JS v2 | `contact.js`, `supabase-config.js` (מקומי / נוצר ב-build) |
 | צ'אט | Supabase Edge Function + Gemini Flash | `chat-widget.js`, `supabase/functions/chat/` |
 | מייל | Supabase Edge Function + Webhook | `send-contact-email/`, `send-tried-to-say-email/` (מתוכנן) |
 | DB | PostgreSQL (Supabase) | `contact_inquiries`, `participant_feedback`, `audience_photos` (מתוכנן) |
 | אחסון | Supabase Storage | bucket `audience-photos` (מתוכנן) |
 
-**קבצים שלא נכנסים ל-git (`.gitignore`):**
-- `supabase-config.js` — מפתחות Supabase
+### 6.1 צ'אט — קבצי ידע (`assets/`)
 
-**תבנית:** `supabase-config.example.js`
+| קובץ | נושא |
+|------|------|
+| `microbiome.lecture.txt` | מיקרוביום, חיידקים, וירוסים |
+| `epigenetics.lecture.txt` | אפיגנטיקה |
+| `basic genetic lecture.txt` | גנטיקה בסיסית |
+| `Genetic engineering lecture.txt` | הנדסה גנטית |
+| `Pricing.txt` | מחירי הרצאות וסדנאות |
+
+**אסטרטגיית עלות (יולי 2026):**
+1. **Routing** — `match()` לפי מילות מפתח; קובץ נטען רק אם השאלה רלוונטית
+2. **Lazy load** — `fetch` מהדפדפן; cache מקומי (`loadedAssets`)
+3. **שליחה חד-פעמית ל-Gemini** — `sentContextPaths`: תוכן קובץ נשלח **רק בהודעה הראשונה** על אותו נושא בשיחה; המשך שיחה מסתמך על היסטוריה (עד 8 הודעות)
+4. **מגבלות** — עד 12,000 תווים הקשר הרצאה; 800 תווים להודעת משתמש; 300 טוקנים לתשובה
+
+**קבצים שלא נכנסים ל-git (`.gitignore`):**
+- `supabase-config.js` — מפתחות Supabase (מקומי או נוצר ב-Vercel build)
+
+**תבנית:** `supabase-config.example.js`  
+**מדריכים:** [SUPABASE_SETUP.md](SUPABASE_SETUP.md), [VERCEL_DEPLOY.md](VERCEL_DEPLOY.md)
 
 ---
 
@@ -207,11 +231,11 @@
 
 | פאזה | תיאור | סטטוס |
 |------|--------|--------|
-| **1** | 5 דפי HTML, CSS, ניווט, תוכן, רקעים, פונטים | ✅ הושלם |
-| **2** | טופס Supabase, ולידציה, מסך תודה, Edge Functions | ✅ קוד מוכן — דורש הגדרת Supabase בפרודקשן |
-| **3** | צ'אט Gemini מבוסס תוכן האתר | ✅ קוד מוכן — דורש פריסת `chat` + `GEMINI_API_KEY` |
-| **4** | GitHub Pages / פריסה ציבורית | ⏳ remote מוגדר; push טרם הושלם |
-| **5** | משובים + תמונות קהל: טופס, תצוגה, Storage, QR, מיילים | ⏳ מתוכנן — ראו [TESTIMONIALS.md](TESTIMONIALS.md) |
+| **1** | 6 דפי HTML, CSS, ניווט, תוכן, רקעים, פונטים | ✅ הושלם |
+| **2** | טופס Supabase, ולידציה, מסך תודה, Edge Functions | ✅ קוד מוכן — **נדרש שחזור Supabase** |
+| **3** | צ'אט Gemini + קבצי הרצאות לפי צורך + שליחה חד-פעמית לנושא | ✅ קוד מוכן — **נדרש שחזור Supabase + GEMINI_API_KEY** |
+| **4** | **פריסה ב-Vercel** + env vars | ⏳ מוכן לפריסה — ראו [VERCEL_DEPLOY.md](VERCEL_DEPLOY.md) |
+| **5** | משובים + תמונות קהל: טופס QR, Storage, מיילים | ⏳ חלקי — `testimonials.html` קיים; `tried-to-say.html` מתוכנן |
 
 ---
 
@@ -232,43 +256,53 @@
 ```
 Nurits_site/
 ├── index.html, lectures.html, training.html, apps.html, contact.html
-├── testimonials.html, tried-to-say.html          # מתוכנן — משובים
+├── testimonials.html                         # תצוגת משובים
+├── tried-to-say.html                         # מתוכנן — טופס QR
 ├── styles.css, script.js
 ├── contact.js, chat-widget.js, training-testimonials.js
-├── testimonials.js, tried-to-say.js              # מתוכנן
-├── apps-layout.js          # legacy — לא בשימוש ב-apps.html
-├── image-move.js           # כלי עזר למיקום תמונות (הדרכות)
-├── fonts/                  # GveretLevin, NoaShalev
-├── assets/                 # תמונות, רקעים, testimonials_snippet.html
-├── supabase/               # schema + Edge Functions
+├── testimonials.js, tried-to-say.js
+├── vercel.json                               # פריסה ב-Vercel
+├── scripts/generate-supabase-config.mjs      # build: supabase-config.js
+├── fonts/                                    # GveretLevin, NoaShalev
+├── assets/                                   # תמונות, רקעים, קבצי הרצאות *.txt
+├── supabase/                                 # schema + Edge Functions
 ├── supabase-config.example.js
-├── PRD.md                  # מסמך זה
-├── TESTIMONIALS.md         # מפרט משובים — ניסינו ורצינו לומר
-├── TASKS_2026-06-11.md     # משימות יישום
-├── PHASE1_IMPLEMENTATION.md
-├── SESSION_SUMMARY.md
-└── SUPABASE_SETUP.md
+├── PRD.md                                    # מסמך זה
+├── VERCEL_DEPLOY.md                          # Supabase מחדש + Vercel
+├── TESTIMONIALS.md
+├── SUPABASE_SETUP.md
+└── README.md
 ```
 
 ---
 
-## 10. הרצה מקומית
+## 10. הרצה מקומית ופריסה
+
+### מקומי
 
 ```bash
 # מתוך שורש הפרויקט (חובה ל-Supabase — לא file://)
-python -m http.server 8080
-# או Live Server ב-VS Code (מומלץ ב-.vscode/extensions.json)
+npm start
+# או: python -m http.server 8080
 ```
 
 פתחי: `http://localhost:8080/index.html`
+
+לפני טופס/צ'אט: העתיקי `supabase-config.example.js` → `supabase-config.js` ומלאי מפתחות.
+
+### פרודקשן (Vercel)
+
+1. שחזור Supabase — [VERCEL_DEPLOY.md](VERCEL_DEPLOY.md) §א  
+2. חיבור repo ל-Vercel + env: `SUPABASE_URL`, `SUPABASE_ANON_KEY`  
+3. Deploy — [VERCEL_DEPLOY.md](VERCEL_DEPLOY.md) §ב
 
 ---
 
 ## 11. Git ו-GitHub
 
-- **Branch:** `main`
-- **Commit אחרון:** `8d8d40b` — Redesign apps page with panel layout and improve training testimonials alignment
-- **Remote:** `https://github.com/nsh68/Nurits_site.git` (repo טרם נוצר / push טרם הושלם)
+- **Branch פעיל:** `cursor/chat-intent-routing-and-persistence` (מיזוג ל-`main` לפני Vercel מומלץ)
+- **Remote:** `https://github.com/nsh68/Nurits_site.git`
+- **Commit אחרון (ענף):** `f59f6f3` — Load lecture assets on demand in chat and reset session on close
 
 ---
 
@@ -281,15 +315,27 @@ python -m http.server 8080
 - מחיקה/הסתרה: נורית בלבד (Dashboard / דף ניהול — `status=removed`)
 - תמונות: bucket עם INSERT ל-anon; קריאה ציבורית רק לנתיבים/רשומות `approved`
 - הגבלות צ'אט: 800 תווים להודעה, 8 הודעות בהיסטוריה, 300 טוקנים לתשובה
+- קבצי הרצאות: routing + lazy load; תוכן נשלח ל-Gemini **פעם אחת לנושא** לכל שיחה
+- **Supabase:** פרויקט לא פעיל עלול **להיות מושהה** — שחזור או פעילות תקופתית (טופס/צ'אט)
 
 ---
 
-## 13. צעדים הבאים (מומלץ)
+## 13. צעדים הבאים (יולי 2026)
 
-1. [ ] יצירת repo ב-GitHub ו-`git push -u origin main`
-2. [ ] חיבור `contact-thanks-clownfish.png` למסך התודה
-3. [ ] פריסת Supabase + מילוי `supabase-config.js` מקומית
-4. [ ] פריסת Edge Functions (`send-contact-email`, `chat`)
-5. [ ] (אופציונלי) הוספת `chat-widget.js` לכל הדפים
-6. [ ] (אופציונלי) GitHub Pages לאירוח סטטי
-7. [ ] יישום פאזה 5 — משובים ([TESTIMONIALS.md](TESTIMONIALS.md), [TASKS_2026-06-11.md](TASKS_2026-06-11.md))
+### Supabase — חיבור מחדש
+1. [ ] שחזור / יצירת פרויקט ב-[Supabase Dashboard](https://supabase.com/dashboard)
+2. [ ] הרצת `supabase/schema.sql`
+3. [ ] פריסת Edge Functions: `chat`, `send-contact-email`
+4. [ ] הגדרת סודות: `GEMINI_API_KEY`, webhook מייל
+5. [ ] עדכון `supabase-config.js` מקומית + בדיקת טופס וצ'אט
+
+### Vercel — פרסום האתר
+6. [ ] מיזוג ל-`main` ו-`git push`
+7. [ ] Import ב-Vercel מ-GitHub
+8. [ ] משתני סביבה: `SUPABASE_URL`, `SUPABASE_ANON_KEY`
+9. [ ] Deploy + בדיקת `contact.html` וצ'אט בכתובת הפרודקשן
+
+### שיפורים
+10. [ ] חיבור `contact-thanks-clownfish.png` למסך התודה
+11. [ ] השלמת `tried-to-say.html` + QR ([TESTIMONIALS.md](TESTIMONIALS.md))
+12. [ ] בדיקה חודשית (טופס/צ'אט) כדי למנוע השהיית Supabase
