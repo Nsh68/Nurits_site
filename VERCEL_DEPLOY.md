@@ -11,10 +11,12 @@ Supabase משהה פרויקטים ללא פעילות. כדי להפעיל מח
 
 ### 1. שחזור הפרויקט
 
+**פרויקט:** `NuritSH_Site` · ref: `srnehuymirirjmvrbqeb` · URL: `https://srnehuymirirjmvrbqeb.supabase.co`
+
 1. היכנסי ל-[https://supabase.com/dashboard](https://supabase.com/dashboard)
-2. בחרי את הפרויקט
-3. אם מופיע **Paused** — לחצי **Restore project** (ייקח כמה דקות)
-4. אם הפרויקט **נמחק** — צרי פרויקט חדש ושמרי URL + anon key חדשים
+2. בחרי **NuritSH_Site**
+3. אם מופיע **Paused / INACTIVE** — לחצי **Restore project** (ייקח כמה דקות)
+4. אם הפרויקט **נמחק** — צרי פרויקט חדש ועדכני URL + anon key
 
 ### 2. בסיס נתונים
 
@@ -100,6 +102,9 @@ git push origin main
 לחצי **Deploy**. כתובת לדוגמה: `https://nurits-site.vercel.app`
 
 ### 5. אחרי הפריסה
+
+- **Production URL:** [https://nurits-site.vercel.app](https://nurits-site.vercel.app)
+- **Vercel Dashboard:** [nsh68s-projects/nurits-site](https://vercel.com/nsh68s-projects/nurits-site)
 
 - [ ] טופס יצירת קשר שולח ל-`contact_inquiries`
 - [ ] צ'אט עונה (Edge Function `chat` + `GEMINI_API_KEY`)

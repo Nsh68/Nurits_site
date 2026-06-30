@@ -1,0 +1,28 @@
+#!/bin/sh
+# Block commits that contain likely secrets.
+set -eu
+
+patterns='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9|AIzaSy[A-Za-z0-9_-]{20,}|service_role["\x27\s]*:|SUPABASE_SERVICE_ROLE_KEY\s*=\s*["\x27]|GEMINI_API_KEY\s*=|GOOGLE_API_KEY\s*=|sk-[A-Za-z0-9]{20,}'
+
+staged_files=$(git diff --cached --name-only --diff-filter=ACM)
+
+for file in $staged_files; do
+  case "$file" in
+    supabase-config.example.js|*.md|.githooks/*|scripts/check-secrets.*)
+      continue
+      ;;
+  esac
+
+  if git diff --cached -- "$file" | grep -Eiq "$patterns"; then
+    echo "pre-commit: possible secret detected in staged changes for: $file"
+    echo "Remove the secret, use env vars / supabase-config.js (gitignored), and try again."
+    exit 1
+  fi
+done
+
+if git diff --cached --name-only | grep -qx 'supabase-config.js'; then
+  echo "pre-commit: supabase-config.js must not be committed (use supabase-config.example.js)."
+  exit 1
+fi
+
+exit 0

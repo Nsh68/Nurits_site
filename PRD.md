@@ -308,7 +308,9 @@ npm start
 
 ## 12. סיכונים ואבטחה
 
-- מפתחות Supabase ו-Gemini **רק** בצד שרת (Edge Functions secrets)
+ראו **[SECURITY.md](SECURITY.md)** — מפתחות, rotation, rate limiting, תקציב 150 ₪.
+
+- מפתחות Supabase ו-Gemini **רק** בצד שרת (Edge Functions secrets) + anon ב-Vercel env
 - RLS: גולשים יכולים INSERT בלבד ל-`contact_inquiries` ו-`participant_feedback` (מתוכנן)
 - אין קריאה ציבורית לפניות / דוא"ל משתתפים מהדפדפן
 - משובים ציבוריים: רק `consent_publish=true` + `status=published`, ללא `email`

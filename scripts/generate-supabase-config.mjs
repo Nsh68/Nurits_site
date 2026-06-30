@@ -2,9 +2,10 @@ import { writeFileSync, existsSync } from "node:fs";
 
 const url = process.env.SUPABASE_URL?.trim() || "";
 const anonKey = process.env.SUPABASE_ANON_KEY?.trim() || "";
+const isVercel = Boolean(process.env.VERCEL);
 
 if (!url || !anonKey) {
-  if (existsSync("supabase-config.js")) {
+  if (!isVercel && existsSync("supabase-config.js")) {
     console.log("SUPABASE env not set — keeping existing supabase-config.js.");
     process.exit(0);
   }
