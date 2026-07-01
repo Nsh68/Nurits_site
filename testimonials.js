@@ -37,6 +37,73 @@
     });
   }
 
+  function parseZoomSnippet(html) {
+    const tpl = document.createElement("template");
+    tpl.innerHTML = html;
+    return Array.from(tpl.content.querySelectorAll("article.testimonial")).map((article) => ({
+      time: article.querySelector("time")?.textContent?.trim() ?? "",
+      message: article.querySelector("p")?.textContent?.trim() ?? "",
+    }));
+  }
+
+  function renderZoomSnippetList(mount, items) {
+    mount.replaceChildren();
+    if (!items.length) {
+      const empty = document.createElement("p");
+      empty.className = "testimonials-empty";
+      empty.textContent = "אין משובים להצגה כרגע.";
+      mount.appendChild(empty);
+      return;
+    }
+
+    const list = document.createElement("div");
+    list.className = "training-testimonials__list";
+
+    for (const item of items) {
+      if (!item.message) continue;
+
+      const row = document.createElement("div");
+      row.className = "training-testimonial";
+
+      const meta = document.createElement("div");
+      meta.className = "training-testimonial__meta";
+
+      const timeEl = document.createElement("time");
+      timeEl.className = "training-testimonial__time";
+      timeEl.textContent = item.time;
+      meta.appendChild(timeEl);
+
+      const msg = document.createElement("p");
+      msg.className = "training-testimonial__message";
+      msg.textContent = item.message;
+
+      row.appendChild(meta);
+      row.appendChild(msg);
+      list.appendChild(row);
+    }
+
+    mount.appendChild(list);
+  }
+
+  async function loadZoomTeacherTestimonials() {
+    const mount = document.querySelector('[data-list="teachers-zoom"]');
+    if (!mount) return;
+
+    try {
+      const res = await fetch("assets/testimonials_snippet.html", { cache: "no-store" });
+      if (!res.ok) throw new Error("fetch failed");
+      const items = parseZoomSnippet(await res.text());
+      renderZoomSnippetList(mount, items);
+    } catch (error) {
+      console.error("Zoom testimonials load error:", error);
+      mount.replaceChildren();
+      const err = document.createElement("p");
+      err.className = "testimonials-empty";
+      err.textContent = "לא ניתן לטעון משובים כרגע.";
+      mount.appendChild(err);
+    }
+  }
+
   function renderCard(item) {
     const card = document.createElement("article");
     card.className = "feedback-card";
@@ -150,10 +217,14 @@
         msg.textContent = "חיבור למסד הנתונים לא הוגדר.";
         mount.appendChild(msg);
       }
+      await loadZoomTeacherTestimonials();
       return;
     }
 
-    await Promise.all(categories.map((c) => loadCategory(client, c)));
+    await Promise.all([
+      ...categories.map((c) => loadCategory(client, c)),
+      loadZoomTeacherTestimonials(),
+    ]);
 
     const hash = window.location.hash.replace("#", "");
     const anchors = { public: "public", teachers: "teachers", apps: "apps" };
