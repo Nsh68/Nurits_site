@@ -153,15 +153,23 @@
     return card;
   }
 
-  function renderList(mount, items) {
+  function renderList(mount, items, options = {}) {
+    const { hideWhenEmpty = false } = options;
     mount.replaceChildren();
     if (!items.length) {
+      if (hideWhenEmpty) {
+        mount.hidden = true;
+        return;
+      }
       const empty = document.createElement("p");
       empty.className = "testimonials-empty";
       empty.textContent = "בקרוב יופיעו כאן משובים.";
+      mount.hidden = false;
       mount.appendChild(empty);
       return;
     }
+
+    mount.hidden = false;
 
     const list = document.createElement("div");
     list.className = "testimonials-list__grid";
@@ -200,7 +208,7 @@
 
     const items = data || [];
     if (galleryMount) renderGallery(galleryMount, items);
-    renderList(listMount, items);
+    renderList(listMount, items, { hideWhenEmpty: category === "teachers" });
   }
 
   ready(async () => {
