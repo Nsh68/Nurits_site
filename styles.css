@@ -758,17 +758,39 @@ main {
 
 /* Responsive */
 @media (max-width: 900px) {
+  .page--home {
+    min-height: auto;
+    padding: 2rem 0 2.5rem;
+    background-position: center 25%;
+  }
+
+  .page--home .home-grid__content {
+    justify-content: center;
+    padding-inline-start: 0;
+  }
+
+  .page--home .bio {
+    margin-inline: 0;
+    max-width: 42rem;
+    padding: 1rem 1.1rem;
+  }
+
   .page--home .home-grid {
     grid-template-columns: 1fr;
     min-height: auto;
+    gap: 1.25rem;
   }
 
   .page--home .home-grid__photo {
     order: -1;
+    padding-inline-end: 0;
+    justify-content: center;
   }
 
   .page--home .home-grid__photo img {
-    max-height: 380px;
+    max-height: min(52vh, 420px);
+    width: 100%;
+    max-width: min(100%, 420px);
   }
 
   .home-grid,
@@ -808,25 +830,37 @@ main {
   .page--training .training-grid__visual img {
     width: 100%;
     max-width: min(100%, 520px);
-    max-height: min(78vh, 560px);
+    max-height: min(48vh, 420px);
     transform: none;
-    margin-top: 80px;
+    margin-top: 1rem;
   }
 
   .page--training .training-testimonials {
     flex: none;
-    height: calc(clamp(300px, 40vh, 460px) + 46px + 4.75rem - 30px);
-    transform: translateX(calc(-1.5rem + 8px + var(--training-image-x, 0px) + var(--training-testimonials-x, 0px)))
-      translateY(var(--training-testimonials-y, 0px));
+    width: 100%;
+    max-width: min(100%, 520px);
+    height: clamp(260px, 42vh, 420px);
+    transform: none;
   }
 
   .page--training .training-visual-stack {
     height: auto;
     flex: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
   }
 
   .page--training .training-grid {
     grid-template-columns: 1fr;
+  }
+
+  .page--training {
+    --training-image-x: 0px;
+    --training-image-y: 0px;
+    --training-testimonials-x: 0px;
+    --training-testimonials-y: 0px;
   }
 
   .page--training .training-audience-list {
@@ -870,6 +904,15 @@ main {
 @media (max-width: 600px) {
   .page {
     padding: 1.75rem 0 3rem;
+  }
+
+  .page--home {
+    padding: 1.5rem 0 2rem;
+  }
+
+  .page--home .bio p {
+    font-size: 1rem;
+    line-height: 1.65;
   }
 }
 
