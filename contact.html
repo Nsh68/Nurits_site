@@ -67,6 +67,10 @@
           <p id="word-count" class="contact-form__hint" aria-live="polite">0 / 200 מילים</p>
         </div>
         <p id="contact-error" class="contact-form__error" role="alert" hidden></p>
+        <div class="visually-hidden" aria-hidden="true">
+          <label for="contact-website">אתר</label>
+          <input type="text" id="contact-website" name="website" tabindex="-1" autocomplete="off" />
+        </div>
         <button type="submit" disabled>שליחה</button>
       </form>
       <div id="contact-thanks" class="contact-thanks" hidden tabindex="-1">
@@ -82,7 +86,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
   <script src="script.js"></script>
-  <script src="contact.js"></script>
-  <script src="chat-widget.js?v=20260611"></script>
+  <script src="contact.js?v=20260825"></script>
+  <script src="chat-widget.js?v=20260825"></script>
 </body>
 </html>

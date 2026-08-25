@@ -1,4 +1,8 @@
 (function () {
+  // Set to true to show the LLM assistant ("המזכירה") on the site again.
+  const CHAT_WIDGET_ENABLED = false;
+  if (!CHAT_WIDGET_ENABLED) return;
+
   const unavailableMessage =
     "הצ'אט אינו זמין כרגע. נשמח לחזור אליכם בנושא זה טלפונית.";
   const fallbackKnowledgeMessage =

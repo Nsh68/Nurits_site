@@ -130,6 +130,14 @@
     return true;
   }
 
+  const CONTACT_EMAIL = "nurithec@gmail.com";
+  const topicLabels = {
+    "public-lecture": "הרצאה לקהל הרחב",
+    "staff-lecture": "הרצאה לצוותי הוראה/צוותי פיתוח",
+    "app-development": "בקשה לפיתוח אפליקציה",
+  };
+
+  // Kept for future Supabase use (chat, database). Not required for sending the form.
   function getSupabaseClient() {
     const config = window.SUPABASE_CONFIG;
     if (!config?.url || !config?.anonKey) {
@@ -152,23 +160,87 @@
     thanks.focus();
   }
 
-  async function notifyByEmail(client, payload) {
-    try {
-      const { error } = await client.functions.invoke("send-contact-email", {
-        body: payload,
-      });
+  function topicLabel(topic) {
+    return topicLabels[topic] || topic || "לא נבחר";
+  }
 
-      if (error) {
-        console.warn("Contact email notification failed:", error);
-      }
-    } catch (error) {
-      console.warn("Contact email notification failed:", error);
+  function emailFields(payload) {
+    return {
+      name: `${payload.first_name} ${payload.last_name}`.trim(),
+      email: payload.email,
+      _replyto: payload.email,
+      _subject: `פנייה חדשה מהאתר - ${topicLabel(payload.topic)}`,
+      _template: "table",
+      _captcha: false,
+      phone: payload.phone,
+      topic: topicLabel(payload.topic),
+      topic_open: payload.topic_open || "-",
+      message: payload.message || "-",
+      word_count: payload.word_count ?? 0,
+    };
+  }
+
+  async function postJson(url, body, extraHeaders) {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        ...(extraHeaders || {}),
+      },
+      body: JSON.stringify(body),
+    });
+    return response;
+  }
+
+  async function sendContactEmail(payload) {
+    try {
+      const apiResponse = await postJson("/api/contact", payload);
+      if (apiResponse.ok) return true;
+    } catch (_error) {
+      // Local static server has no /api/contact — fall through.
     }
+
+    const formResponse = await postJson(
+      `https://formsubmit.co/ajax/${CONTACT_EMAIL}`,
+      emailFields(payload)
+    );
+    const data = await formResponse.json().catch(() => ({}));
+    const failed =
+      !formResponse.ok || data.success === false || data.success === "false";
+    if (failed) {
+      throw new Error(data.message || "Email delivery failed");
+    }
+    return true;
+  }
+
+  // Optional archive for when Supabase is connected again. Never blocks email.
+  function trySaveToSupabase(payload) {
+    const client = getSupabaseClient();
+    if (!client) return;
+
+    client
+      .from("contact_inquiries")
+      .insert([payload])
+      .then(({ error }) => {
+        if (error) {
+          console.warn("Supabase archive skipped (kept for future use):", error);
+        }
+      })
+      .catch((error) => {
+        console.warn("Supabase archive skipped (kept for future use):", error);
+      });
   }
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     clearError();
+
+    const honeypot = form.elements.website;
+    if (honeypot && honeypot.value.trim()) {
+      showThanks();
+      return;
+    }
 
     if (!validateRequiredFields()) {
       updateSubmitState();
@@ -180,14 +252,6 @@
       if (messageField) messageField.focus();
       updateWordCount();
       showError(`ההודעה ארוכה מדי (${MAX_WORDS} מילים מקסימום).`);
-      return;
-    }
-
-    const client = getSupabaseClient();
-    if (!client) {
-      showError(
-        "חיבור למסד הנתונים לא הוגדר. צרו קובץ supabase-config.js עם כתובת הפרויקט ומפתח anon."
-      );
       return;
     }
 
@@ -208,19 +272,17 @@
 
     setSubmitting(true);
 
-    const { error } = await client.from("contact_inquiries").insert([payload]);
-
-    setSubmitting(false);
-
-    if (error) {
-      console.error("Supabase insert error:", error);
+    try {
+      await sendContactEmail(payload);
+      trySaveToSupabase(payload);
+      showThanks();
+    } catch (error) {
+      console.error("Contact email error:", error);
       showError(
-        "לא הצלחנו לשלוח את הטופס. נסו שוב בעוד רגע, או פנו בדוא״ל ישירות."
+        "לא הצלחנו לשלוח את הטופס. נסו שוב בעוד רגע, או פנו בדוא״ל ישירות ל-nurithec@gmail.com."
       );
-      return;
+    } finally {
+      setSubmitting(false);
     }
-
-    notifyByEmail(client, payload);
-    showThanks();
   });
 })();

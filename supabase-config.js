@@ -1,6 +1,8 @@
 // החליפי בערכים האמיתיים מ-Supabase (Project Settings → API)
 // או העתיקי מ-supabase-config.example.js לאחר מילוי
 
+// Live values are optional. Keep this file so Supabase can be reconnected later
+// (chat widget, contact archive, etc.) without rebuilding the site wiring.
 window.SUPABASE_CONFIG = {
   url: "https://srnehuymirirjmvrbqeb.supabase.co",
   anonKey:

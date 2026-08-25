@@ -1,5 +1,8 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 
+// Kept for future Supabase email delivery. The live contact form now emails
+// nurithec@gmail.com via the Vercel /api/contact route (no database required).
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
