@@ -1,16 +1,28 @@
 # חיבור טופס יצירת קשר ל-Supabase
 
-**עדכון:** 8 ביוני 2026
+**עדכון:** 1 ביולי 2026
 
-מסמך זה משלים את [PRD.md](PRD.md) ומתאר הגדרת Supabase, מייל והצ'אט.
+מסמך זה משלים את [PRD.md](PRD.md) ומתאר הגדרת Supabase, מייל, צ'אט ופריסה.
+
+> **פרויקט הושהה?** ראו [VERCEL_DEPLOY.md](VERCEL_DEPLOY.md) §א — שחזור Supabase מלא.  
+> **פריסה ב-Vercel?** ראו [VERCEL_DEPLOY.md](VERCEL_DEPLOY.md) §ב.
 
 ---
 
 ## 0. לפני שמתחילים
 
 - `supabase-config.js` **אינו** ב-git (ראי `.gitignore`) — צרי אותו מקומית מ-`supabase-config.example.js`
+- ב-**Vercel**: `supabase-config.js` נוצר אוטומטית ב-build מ-`SUPABASE_URL` + `SUPABASE_ANON_KEY`
 - האתר חייב לרוץ דרך שרת HTTP (`http://localhost:8080`) — לא `file://`
 - נכס `assets/contact-thanks-clownfish.png` קיים לתמונת מסך תודה — עדיין לא מחובר ב-`contact.html`
+
+## 0.1 שחזור פרויקט Supabase שהושהה
+
+1. [Supabase Dashboard](https://supabase.com/dashboard) → בחרי פרויקט → **Restore project**
+2. אם נמחק — פרויקט חדש + URL ו-anon key חדשים
+3. הריצי שוב `supabase/schema.sql` ב-SQL Editor
+4. פרסי מחדש Edge Functions וסודות (§4, §6)
+5. עדכני `supabase-config.js` (מקומי) ומשתני Vercel
 
 ---
 
@@ -90,12 +102,14 @@ supabase functions deploy send-contact-email
 
 ## 6. צ'אט בסיסי עם Gemini Flash
 
-באתר יש ווידג'ט צ'אט (`chat-widget.js`) שנטען כיום **רק ב-`contact.html`**. (במפרט המקורי — בכל הלשוניות; ניתן להוסיף `<script src="chat-widget.js">` לשאר הדפים.)
+באתר יש ווידג'ט צ'אט (`chat-widget.js`) ב**כל הדפים**.
 
 הדפדפן קורא ל-Supabase Edge Function בשם `chat`, והפונקציה קוראת ל-Gemini Flash בצד השרת בלבד. אין לשים מפתח Gemini בקבצי האתר.
 
-הפונקציה נמצאת ב-`supabase/functions/chat/index.ts` וכוללת קונטקסט עברי קצר מתוך תכני האתר. הבוט מונחה לענות רק לפי המידע הזה. אם המידע אינו מופיע באתר, עליו לענות:  
-`איני יודעת לענות על כך מתוך המידע הקיים באתר. נשמח לחזור אליכם בנושא זה טלפונית.`
+**קבצי ידע** (נטענים לפי צורך מ-`assets/*.txt`):
+- routing לפי מילות מפתח בשאלה
+- תוכן קובץ נשלח ל-Gemini **רק בהודעה הראשונה** על אותו נושא בשיחה (`sentContextPaths`)
+- ראו PRD §6.1
 
 מגבלות עלות ובטיחות שמוגדרות בקוד:
 

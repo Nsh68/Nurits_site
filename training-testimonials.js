@@ -50,10 +50,29 @@
     mount.replaceChildren(list);
   }
 
+  function fitTrainingImage(sectionTopInStack) {
+    const img = document.querySelector(".training-grid__visual img");
+    const stack = document.querySelector(".training-visual-stack");
+    if (!img || !stack || sectionTopInStack == null) return;
+
+    img.style.marginTop = "0";
+    void img.offsetHeight;
+
+    const stackRect = stack.getBoundingClientRect();
+    const imgRect = img.getBoundingClientRect();
+    const targetBottom = sectionTopInStack - 10;
+    const currentBottom = imgRect.bottom - stackRect.top;
+    const delta = Math.round(targetBottom - currentBottom);
+
+    img.style.transform =
+      `translateX(calc(-1.5rem + var(--training-image-x, 0px))) translateY(calc(var(--training-image-y, 0px) - 125px + ${delta}px))`;
+  }
+
   function fitTestimonialsPanel() {
     const section = document.querySelector(".training-testimonials");
     const alignTarget = document.querySelector(".training-page__title--section");
     const stack = document.querySelector(".training-visual-stack");
+    const img = document.querySelector(".training-grid__visual img");
     const lastPanel = document.querySelector(
       ".training-grid__content .training-panel-list:last-of-type .training-panel-list__item:last-child"
     );
@@ -67,6 +86,10 @@
       section.style.width = "";
       section.style.height = "";
       section.style.marginTop = "";
+      if (img) {
+        img.style.transform = "";
+        img.style.marginTop = "";
+      }
       return;
     }
 
@@ -83,13 +106,15 @@
       rowExtra = card.offsetHeight + gap;
     }
 
+    const sectionTop = Math.round(Math.max(0, top));
     section.style.position = "absolute";
-    section.style.top = `${Math.round(Math.max(0, top))}px`;
+    section.style.top = `${sectionTop}px`;
     section.style.left = "0";
     section.style.right = "0";
     section.style.width = "100%";
     section.style.marginTop = "0";
     section.style.height = `${Math.round(Math.max(220, height + rowExtra - 30))}px`;
+    fitTrainingImage(sectionTop);
   }
 
   ready(async () => {

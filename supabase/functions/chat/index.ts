@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,10 +24,17 @@ const contactPageReply =
   'ליצירת קשר ושליחת פנייה, עברו ללשונית "יצירת קשר" באתר — שם מחכה לכם טופס מלא. אם משהו לא ברור — חזרו אליי.';
 const tooLongMessage =
   "השאלה ארוכה מדי לצ'אט. אנא קצרו אותה לעד 800 תווים ושלחו שוב.";
+const chatDisabledMessage =
+  "הצ'אט אינו זמין כרגע. נשמח לחזור אליכם בנושא זה טלפונית.";
+const rateLimitMessage =
+  "הגעתם למגבלת השימוש בצ'אט לשעה הקרובה. נסו שוב מאוחר יותר, או פנו דרך טופס יצירת קשר.";
 const maxMessageChars = 800;
 const maxMessagesForGemini = 8;
 const maxHistoryMessages = 6;
-const maxOutputTokens = 500;
+const maxOutputTokens = 300;
+const maxLectureContextChars = 12000;
+const defaultHourlyRateLimit = 25;
+const defaultDailyRateLimit = 80;
 
 const siteKnowledge = `
 מידע מאושר מתוך אתר נורית שושני-הכל:
@@ -100,6 +108,70 @@ function getGeminiApiKey() {
     Deno.env.get("API_KEY") ||
     ""
   ).trim();
+}
+
+function isChatEnabled() {
+  const value = Deno.env.get("CHAT_ENABLED")?.trim().toLowerCase();
+  return value !== "false" && value !== "0" && value !== "off";
+}
+
+function getRateLimits() {
+  const hour = Number.parseInt(
+    Deno.env.get("CHAT_RATE_LIMIT_HOUR") || String(defaultHourlyRateLimit),
+    10
+  );
+  const day = Number.parseInt(
+    Deno.env.get("CHAT_RATE_LIMIT_DAY") || String(defaultDailyRateLimit),
+    10
+  );
+  return {
+    hour: Number.isFinite(hour) && hour > 0 ? hour : defaultHourlyRateLimit,
+    day: Number.isFinite(day) && day > 0 ? day : defaultDailyRateLimit,
+  };
+}
+
+function getClientIp(req: Request) {
+  return (
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    req.headers.get("cf-connecting-ip") ||
+    req.headers.get("x-real-ip") ||
+    "unknown"
+  );
+}
+
+async function hashIp(ip: string) {
+  const salt = Deno.env.get("CHAT_RATE_SALT") || "nurit-chat-v1";
+  const data = new TextEncoder().encode(`${salt}:${ip}`);
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(digest))
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+async function checkRateLimit(req: Request) {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!supabaseUrl || !serviceRoleKey) {
+    return { allowed: true };
+  }
+
+  const limits = getRateLimits();
+  const ipHash = await hashIp(getClientIp(req));
+  const supabase = createClient(supabaseUrl, serviceRoleKey);
+
+  const { data, error } = await supabase.rpc("increment_chat_rate", {
+    p_ip_hash: ipHash,
+    p_hour_limit: limits.hour,
+    p_day_limit: limits.day,
+  });
+
+  if (error) {
+    console.warn("Rate limit check failed:", error.message);
+    return { allowed: true };
+  }
+
+  const allowed = data?.allowed !== false;
+  return { allowed };
 }
 
 function getGeminiModels() {
@@ -290,6 +362,27 @@ function replyForIntent(intent: RoutedIntent) {
   }
 }
 
+function getRecoveryReply(text: string) {
+  if (/נתקע|נקטע|נשבר|לא עובד|באמצע|מה קורה/i.test(text)) {
+    return "מצטערת על החבט! נסו לשאול שוב בקצרה, או עברו ללשונית הרלוונטית באתר. אני כאן לעזור.";
+  }
+  return null;
+}
+
+function getKnownSubtopicReply(text: string) {
+  const he = hebrewLettersOnly(text);
+  if (/אפיגנט/.test(he)) {
+    return "הרצאה על אפיגנטיקה עוסקת באופן שבו מחשבותינו, מעשינו וסביבתנו משפיעים על ביטוי הגנים בתאי גופנו, עם דוגמאות ממחקרים פורצי דרך. לפרטים נוספים — לשונית \"הרצאות לקהל הרחב\".";
+  }
+  if (/וירוס|חיידק/.test(he)) {
+    if (/ריפוי|אונקולוג|סרטן|זיהומ|ניצול/.test(he)) {
+      return "נורית מציעה הרצאה על ניצול וירוסים לריפוי מחלות זיהומיות ולריפוי מחלות אונקולוגיות, כולל סרטן. לפרטים נוספים עברו ללשונית \"הרצאות לקהל הרחב\", ואם משהו לא ברור — חזרו אליי.";
+    }
+    return 'באתר מופיעות שתי הרצאות בנושא וירוסים: האחת על חיידקים ווירוסים שחיים עלינו ובתוכנו ומשפיעים על בריאותנו, והשנייה על ניצול וירוסים לריפוי מחלות זיהומיות ואונקולוגיות. לפרטים נוספים — לשונית "הרצאות לקהל הרחב".';
+  }
+  return null;
+}
+
 function sanitizeReply(raw: string) {
   let text = raw.trim();
   if (!text) return null;
@@ -388,6 +481,15 @@ serve(async (req) => {
     return jsonResponse({ error: "Method not allowed" }, 405);
   }
 
+  if (!isChatEnabled()) {
+    return jsonResponse({ reply: chatDisabledMessage });
+  }
+
+  const rateLimit = await checkRateLimit(req);
+  if (!rateLimit.allowed) {
+    return jsonResponse({ reply: rateLimitMessage }, 429);
+  }
+
   const apiKey = getGeminiApiKey();
   if (!apiKey) {
     return jsonResponse({ error: "Gemini API key is not configured" }, 500);
@@ -426,9 +528,39 @@ serve(async (req) => {
     return jsonResponse({ reply: routedReply });
   }
 
+  const resolvedMessage = resolveUserMessage(latestUserMessage);
+  const recoveryReply = getRecoveryReply(resolvedMessage);
+  if (recoveryReply) {
+    return jsonResponse({ reply: recoveryReply });
+  }
+
+  const lectureContext =
+    typeof payload.lectureContext === "string"
+      ? payload.lectureContext.trim().slice(0, maxLectureContextChars)
+      : "";
+
+  if (!lectureContext) {
+    const subtopicReply = getKnownSubtopicReply(resolvedMessage);
+    if (subtopicReply) {
+      return jsonResponse({ reply: subtopicReply });
+    }
+  }
+
+  const lectureKnowledge = lectureContext
+    ? `
+
+מידע מפורט מהרצאות (השתמשי בו לשאלות על הנושא הספציפי; אל תמציאי מעבר למה שכתוב כאן):
+${lectureContext}
+`
+    : "";
+
+  const answerLengthHint = lectureContext
+    ? "עני בעברית, בקצרה ובבהירות (עד 5–6 משפטים), לפי המידע המאושר והמידע המפורט מהרצאות."
+    : "עני בעברית, בקצרה (עד 3–4 משפטים), רק לפי המידע המאושר למטה.";
+
   const systemPrompt = `
 את המזכירה הווירטואלית של אתר נורית שושני-הכל — מנומסת, חביבה, עם חוש הומור בינוני.
-עני בעברית, בקצרה (עד 3–4 משפטים), רק לפי המידע המאושר למטה.
+${answerLengthHint}
 אל תפרטי רשימות ארוכות — אם נשאלים על נושא כללי, הפני ללשונית המתאימה באתר.
 שמרי על המשכיות השיחה: התייחסי למה שכבר נאמר בפנייה.
 אין להמציא פרטים, מחירים, תאריכים, זמינות, טלפונים או הבטחות.
@@ -437,7 +569,7 @@ ${fallbackReply}
 
 פורמט: רק תשובה סופית בעברית, בלי markdown, בלי כוכביות, בלי שלבי חשיבה באנגלית.
 
-${siteKnowledge}
+${siteKnowledge}${lectureKnowledge}
 `;
 
   const requestBody = JSON.stringify({

@@ -11,14 +11,63 @@
     "השאלה ארוכה מדי לצ'אט. אנא קצרו אותה לעד 800 תווים ושלחו שוב.";
   const welcomeMessage =
     "שלום ותודה על הפנייה! אני המזכירה של נורית — אשמח לעזור במה שמופיע באתר: הרצאות, הדרכות או אפליקציות.";
-  const storageKey = "nurit-chat-state";
+  const storageKey = "nurit-chat-state-v2";
   const maxMessageChars = 800;
   const maxMessagesForChat = 8;
-  const maxStoredMessages = 40;
+  const maxLectureContextChars = 12000;
+
+  const lectureSources = [
+    {
+      path: "assets/microbiome.lecture.txt",
+      label: "הרצאה על מיקרוביום, חיידקים ווירוסים",
+      match(text) {
+        if (/מיקרוב/i.test(text)) return true;
+        if (/חיידק/i.test(text)) return true;
+        if (/וירוס|ווירוס/i.test(text) && /ריפוי|אונקולוג|סרטן|ניצול/i.test(text)) {
+          return false;
+        }
+        return /וירוס|ווירוס|microbiome/i.test(text);
+      },
+    },
+    {
+      path: "assets/epigenetics.lecture.txt",
+      label: "הרצאה על אפיגנטיקה",
+      match(text) {
+        return /אפיגנט|epigenet/i.test(text);
+      },
+    },
+    {
+      path: "assets/basic genetic lecture.txt",
+      label: "הרצאה על גנטיקה בסיסית",
+      match(text) {
+        if (/אפיגנט|מיקרוב|חיידק|וירוס|ווירוס|הנדסה גנטית/i.test(text)) {
+          return false;
+        }
+        if (/גנטיקה בסיסית/i.test(text)) return true;
+        return /(?:^|\s)גנטיק(?:ה|ת)\b|תורש(?:ה|ת)|מנדל|דנ\"א|\bdna\b/i.test(text);
+      },
+    },
+    {
+      path: "assets/Genetic engineering lecture.txt",
+      label: "הרצאה על הנדסה גנטית",
+      match(text) {
+        return /הנדסה גנטית|genetic engineering/i.test(text);
+      },
+    },
+    {
+      path: "assets/Pricing.txt",
+      label: "מחירי הרצאות וסדנאות",
+      match(text) {
+        return /מחיר|עלות|כמה עול|תמחור|pricing|price/i.test(text);
+      },
+    },
+  ];
 
   let client = null;
   let isSending = false;
   const history = [];
+  const loadedAssets = new Map();
+  const sentContextPaths = new Set();
 
   function getSupabaseClient() {
     if (client) return client;
@@ -32,29 +81,11 @@
     return client;
   }
 
-  function loadStoredState() {
+  function clearPersistedState() {
     try {
-      const raw = localStorage.getItem(storageKey);
-      if (!raw) return null;
-      const parsed = JSON.parse(raw);
-      if (!Array.isArray(parsed.ui) || !Array.isArray(parsed.history)) return null;
-      return parsed;
+      localStorage.removeItem(storageKey);
     } catch (_error) {
-      return null;
-    }
-  }
-
-  function saveState(uiMessages) {
-    try {
-      localStorage.setItem(
-        storageKey,
-        JSON.stringify({
-          ui: uiMessages.slice(-maxStoredMessages),
-          history: history.slice(-maxStoredMessages),
-        })
-      );
-    } catch (_error) {
-      // Ignore quota or private-mode storage errors.
+      // Ignore private-mode storage errors.
     }
   }
 
@@ -75,19 +106,22 @@
     list.scrollTop = list.scrollHeight;
   }
 
-  function addMessage(list, role, text, uiMessages, persist = true) {
+  function addMessage(list, role, text, uiMessages) {
     renderMessage(list, role, text);
-    if (persist && uiMessages) {
+    if (uiMessages) {
       uiMessages.push({ role, content: text });
-      saveState(uiMessages);
     }
   }
 
-  function restoreMessages(list, uiMessages) {
+  function resetChatSession(list, uiMessages) {
+    history.length = 0;
+    uiMessages.length = 0;
+    uiMessages.push({ role: "assistant", content: welcomeMessage });
     list.textContent = "";
-    uiMessages.forEach((message) => {
-      renderMessage(list, message.role, message.content);
-    });
+    renderMessage(list, "assistant", welcomeMessage);
+    loadedAssets.clear();
+    sentContextPaths.clear();
+    clearPersistedState();
   }
 
   function setStatus(statusEl, text) {
@@ -100,6 +134,60 @@
     button.disabled = sending;
     textarea.disabled = sending;
     button.textContent = sending ? "שולחת..." : "שליחה";
+  }
+
+  function buildMatchText(currentText) {
+    const recent = history
+      .slice(-4)
+      .map((message) => message.content)
+      .join(" ");
+    return `${recent} ${currentText}`.trim();
+  }
+
+  function getMatchingSources(text) {
+    return lectureSources.filter((source) => source.match(text));
+  }
+
+  async function loadAsset(path) {
+    if (loadedAssets.has(path)) {
+      return loadedAssets.get(path);
+    }
+
+    try {
+      const response = await fetch(encodeURI(path), { cache: "no-store" });
+      if (!response.ok) return null;
+      const content = (await response.text()).trim();
+      if (!content) return null;
+      loadedAssets.set(path, content);
+      return content;
+    } catch (_error) {
+      return null;
+    }
+  }
+
+  async function getRelevantLectureContext(text) {
+    const matchText = buildMatchText(text);
+    const sources = getMatchingSources(matchText);
+    if (!sources.length) return null;
+
+    const newSources = sources.filter((source) => !sentContextPaths.has(source.path));
+    if (!newSources.length) return null;
+
+    const sections = [];
+    for (const source of newSources) {
+      const content = await loadAsset(source.path);
+      if (content) {
+        sections.push(`=== ${source.label} ===\n${content}`);
+        sentContextPaths.add(source.path);
+      }
+    }
+
+    if (!sections.length) return null;
+
+    const combined = sections.join("\n\n");
+    return combined.length > maxLectureContextChars
+      ? combined.slice(0, maxLectureContextChars)
+      : combined;
   }
 
   async function sendMessage({ list, statusEl, textarea, sendButton, uiMessages }) {
@@ -121,13 +209,18 @@
     textarea.value = "";
     addMessage(list, "user", text, uiMessages);
     history.push({ role: "user", content: text });
-    saveState(uiMessages);
     setStatus(statusEl, "");
     setSending(sendButton, textarea, true);
 
     try {
+      const lectureContext = await getRelevantLectureContext(text);
+      const body = { messages: history.slice(-maxMessagesForChat) };
+      if (lectureContext) {
+        body.lectureContext = lectureContext;
+      }
+
       const { data, error } = await supabaseClient.functions.invoke("chat", {
-        body: { messages: history.slice(-maxMessagesForChat) },
+        body,
       });
 
       if (error) throw error;
@@ -138,12 +231,10 @@
           : fallbackKnowledgeMessage;
       addMessage(list, "assistant", reply, uiMessages);
       history.push({ role: "assistant", content: reply });
-      saveState(uiMessages);
     } catch (error) {
       console.warn("Chat function failed:", error);
       setStatus(statusEl, unavailableMessage);
-      addMessage(list, "assistant", unavailableMessage, uiMessages);
-      saveState(uiMessages);
+      renderMessage(list, "assistant", unavailableMessage);
     } finally {
       setSending(sendButton, textarea, false);
       textarea.focus();
@@ -153,14 +244,9 @@
   function initChatWidget() {
     if (document.querySelector(".chat-widget")) return;
 
-    const stored = loadStoredState();
-    const uiMessages = stored?.ui?.length
-      ? stored.ui.slice()
-      : [{ role: "assistant", content: welcomeMessage }];
+    clearPersistedState();
 
-    if (stored?.history?.length) {
-      stored.history.forEach((message) => history.push(message));
-    }
+    const uiMessages = [{ role: "assistant", content: welcomeMessage }];
 
     const root = createElement("section", "chat-widget");
     root.setAttribute("aria-label", "צ'אט מידע");
@@ -181,7 +267,7 @@
 
     const list = createElement("div", "chat-widget__messages");
     list.setAttribute("aria-live", "polite");
-    restoreMessages(list, uiMessages);
+    renderMessage(list, "assistant", welcomeMessage);
 
     const statusEl = createElement("p", "chat-widget__status");
     statusEl.hidden = true;
@@ -210,6 +296,7 @@
     }
 
     function closePanel() {
+      resetChatSession(list, uiMessages);
       panel.hidden = true;
       root.classList.remove("chat-widget--open");
       toggle.setAttribute("aria-expanded", "false");

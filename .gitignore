@@ -1,6 +1,9 @@
 # Dependencies (Supabase CLI via npm)
 node_modules/
 
+# Local Supabase credentials — never commit
+supabase-config.js
+
 # Supabase local link/cache files
 supabase/.temp/
 
@@ -9,3 +12,4 @@ _test-*.mjs
 
 # Optional local doc backups
 *.local.bak.md
+.vercel
